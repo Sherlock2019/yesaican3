@@ -39,6 +39,7 @@ NAV_ITEMS: list[tuple[str, str, str]] = [
     ("Current Cures and Remedies", "cures_list",   "pill"),
     ("Current Challenge Pipeline", "pipeline",      "flow"),
     ("Current POC",       "poc_hub",              "flask"),
+    ("AI Human Trainers", "ai_human_trainers",      "teacher"),
     ("Community Agent Library", "agent_library",    "robot"),
     # People & Skills folded into Community — the page still exists and its
     # route still resolves, it is just not a second rail entry for the same
@@ -72,6 +73,7 @@ _ICONS = {
     "pill":  "M10.5 3.5a5 5 0 0 1 7 7l-7 7a5 5 0 0 1-7-7zM7 7l7 7",
     "org":   "M9 4h6v4H9zM3 16h6v4H3zM15 16h6v4h-6zM12 8v4M6 16v-2h12v2",
     "megaphone": "M3 11v2a1 1 0 0 0 1 1h2l4 4V6L6 10H4a1 1 0 0 0-1 1zM14 8.5a4 4 0 0 1 0 7M17 5.5a8 8 0 0 1 0 13",
+    "teacher": "M12 7a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM7 21v-4a5 5 0 0 1 10 0v4M3 11h5M3 8v6",
     "chart": "M4 4v16h16M8 16v-5M12 16V8M16 16v-3",
     "gear":  "M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 4.6 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 2.9-1.2 2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9 2 2 0 1 1 0 4z",
 }
@@ -80,7 +82,9 @@ _ICONS = {
 SHELL_CSS = """
 <style>
 :root{
-  --sb-w:240px; --tb-h:72px;
+  /* 265px so the author byline sits on one line. Everything else keys off this
+     variable, including the page's left padding, so widening it is a one-liner. */
+  --sb-w:265px; --tb-h:72px;
   /* Sidebar on Apple's iOS dark palette. The deep purple ground was the real
      problem: a saturated hue leaves very little room between "readable label"
      and "the background", so every inactive item read as disabled. iOS solves
@@ -188,21 +192,6 @@ html,body,[class*="css"]{ font-family:Inter,"Segoe UI",system-ui,-apple-system,s
    icon supports it, instead of the two competing. */
 .yz-nav a:not(.on) svg{ opacity:.72; }
 .yz-nav a:hover svg{ opacity:1; }
-
-.yz-promo{
-  margin-top:auto; background:var(--nav-bg2); border:1px solid var(--nav-sep);
-  border-radius:14px; padding:1rem .95rem; color:#fff; position:relative; overflow:hidden;
-}
-.yz-promo h4{ font-size:.93rem; font-weight:650; margin:0 0 .4rem; line-height:1.25;
-  letter-spacing:-.01em; }
-.yz-promo p{ font-size:.77rem; color:rgba(235,235,245,.60); margin:0 0 .7rem; line-height:1.45; }
-.yz-promo .rocket{ font-size:1.5rem; display:block; text-align:right; margin:-.2rem 0 .2rem; }
-.yz-promo a{
-  display:block; text-align:center; background:var(--nav-tint-2); color:#fff;
-  text-decoration:none; font-size:.83rem; font-weight:600; padding:.55rem; border-radius:10px;
-  letter-spacing:-.01em;
-}
-.yz-promo a:hover{ background:#409CFF; }
 
 /* ---- top bar ---- */
 .yz-tb{
@@ -318,12 +307,6 @@ def render_shell(active: str = "") -> str:
     </span>
   </div>
   <nav class="yz-nav">{_nav(active)}</nav>
-  <div class="yz-promo">
-    <h4>Build AI. Solve Problems.<br>Make Impact.</h4>
-    <p>Together we build better services, happier customers, and a better world.</p>
-    <span class="rocket">🚀</span>
-    <a href="/documentation_learning" target="_self">Learn More</a>
-  </div>
 </div>
 
 <div class="yz-tb">
