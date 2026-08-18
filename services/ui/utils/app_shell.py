@@ -44,6 +44,10 @@ NAV_ITEMS: list[tuple[str, str, str]] = [
     # route still resolves, it is just not a second rail entry for the same
     # errand: find a person, read about the community.
     ("Community",         "community_ambassadors", "people"),
+    # Feedback about the LAB itself, kept out of the painpoint queue — that
+    # queue is the product, and "this page confused me" is not the same kind of
+    # thing as "billing takes 45 minutes".
+    ("Improvements Feedback", "improvements",     "megaphone"),
     # Learning Center moved to the top as "Getting Started" — it is what a new
     # arrival needs first, not a footnote after everything else.
     #
@@ -67,6 +71,7 @@ _ICONS = {
     "cap":   "M2 9l10-5 10 5-10 5zM6 11.5V17c0 1.5 3 3 6 3s6-1.5 6-3v-5.5",
     "pill":  "M10.5 3.5a5 5 0 0 1 7 7l-7 7a5 5 0 0 1-7-7zM7 7l7 7",
     "org":   "M9 4h6v4H9zM3 16h6v4H3zM15 16h6v4h-6zM12 8v4M6 16v-2h12v2",
+    "megaphone": "M3 11v2a1 1 0 0 0 1 1h2l4 4V6L6 10H4a1 1 0 0 0-1 1zM14 8.5a4 4 0 0 1 0 7M17 5.5a8 8 0 0 1 0 13",
     "chart": "M4 4v16h16M8 16v-5M12 16V8M16 16v-3",
     "gear":  "M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 4.6 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 2.9-1.2 2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9 2 2 0 1 1 0 4z",
 }
@@ -121,12 +126,17 @@ html,body,[class*="css"]{ font-family:Inter,"Segoe UI",system-ui,-apple-system,s
 }
 .yz-sb::-webkit-scrollbar{ width:6px; }
 .yz-sb::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.16); border-radius:9px; }
-.yz-brand{ display:flex; align-items:center; gap:.66rem; padding:.15rem .4rem 1.15rem; }
+/* Stacked, not side by side: at this size the mark is wider than the room left
+   beside it in a 240px rail, so the wordmark sits underneath it instead. */
+.yz-brand{
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  gap:.55rem; padding:.35rem .4rem 1.25rem;
+}
 .yz-mark{
   /* iOS app-icon geometry: a superellipse-ish 22% radius, not a rounded square. */
-  width:46px; height:46px; border-radius:22%; flex:0 0 46px; overflow:hidden;
+  width:138px; height:138px; border-radius:22%; flex:0 0 138px; overflow:hidden;
   display:flex; align-items:center; justify-content:center;
-  box-shadow:0 4px 14px rgba(94,92,230,.42);
+  box-shadow:0 8px 26px rgba(94,92,230,.40);
 }
 /* No gradient behind the artwork: the emblem carries its own near-black ground,
    and a tint underneath it would show as a rim wherever the PNG is transparent. */
@@ -205,14 +215,10 @@ html,body,[class*="css"]{ font-family:Inter,"Segoe UI",system-ui,-apple-system,s
 }
 .yz-cta:hover{ background:var(--pc-indigo-dark); color:#fff; }
 .yz-bell{ color:var(--pc-ink-faint); display:flex; }
-.yz-user{ display:flex; align-items:center; gap:.6rem; }
-.yz-av{
-  width:38px; height:38px; border-radius:50%; flex:0 0 38px; color:#fff; font-weight:700;
-  font-size:.86rem; display:flex; align-items:center; justify-content:center;
-  background:linear-gradient(135deg,#8b6cff,#d05bb8);
-}
-.yz-user b{ display:block; font-size:.87rem; color:var(--pc-ink); line-height:1.15; }
-.yz-user span{ display:block; font-size:.75rem; color:var(--pc-ink-faint); }
+/* The signed-in chip is gone. It showed a hard-coded "Avery Chen / Racker" to
+   everybody: not the viewer's name, not anyone's, and a leftover of the
+   Rackspace wording besides. A fake identity is worse than none, and the app
+   has no session to read a real one from. */
 
 @media (max-width:1100px){
   :root{ --sb-w:0px; }
@@ -245,11 +251,6 @@ def _nav(active: str) -> str:
             f"<span>{html.escape(label)}</span></a>"
         )
     return "".join(rows)
-
-
-def _initials(name: str) -> str:
-    parts = [p for p in str(name or "").split() if p]
-    return ("".join(p[0] for p in parts[:2]) or "R").upper()
 
 
 def _c(markup: str) -> str:
@@ -291,7 +292,7 @@ def _brand_mark() -> str:
     )
 
 
-def render_shell(active: str = "", user_name: str = "Avery Chen", user_role: str = "Racker") -> str:
+def render_shell(active: str = "") -> str:
     """HTML for the whole frame. Render once per page, before any content."""
     return SHELL_CSS + _c(f"""
 <div class="yz-sb">
@@ -325,9 +326,5 @@ def render_shell(active: str = "", user_name: str = "Avery Chen", user_role: str
          stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10.5 21a2 2 0 0 0 3 0"/></svg>
   </span>
-  <div class="yz-user">
-    <span class="yz-av">{html.escape(_initials(user_name))}</span>
-    <span><b>{html.escape(user_name)}</b><span>{html.escape(user_role)}</span></span>
-  </div>
 </div>
 """)
