@@ -8,7 +8,10 @@ keeps the markup identical to the design and survives reruns.
 
 from __future__ import annotations
 
+import base64
 import html
+from functools import lru_cache
+from pathlib import Path
 from typing import Iterable
 
 __all__ = ["NAV_ITEMS", "render_shell", "SHELL_CSS"]
@@ -118,14 +121,21 @@ html,body,[class*="css"]{ font-family:Inter,"Segoe UI",system-ui,-apple-system,s
 }
 .yz-sb::-webkit-scrollbar{ width:6px; }
 .yz-sb::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.16); border-radius:9px; }
-.yz-brand{ display:flex; align-items:center; gap:.6rem; padding:.15rem .45rem 1.1rem; }
+.yz-brand{ display:flex; align-items:center; gap:.66rem; padding:.15rem .4rem 1.15rem; }
 .yz-mark{
   /* iOS app-icon geometry: a superellipse-ish 22% radius, not a rounded square. */
-  width:36px; height:36px; border-radius:22%; flex:0 0 36px;
-  background:linear-gradient(135deg,var(--nav-tint),var(--nav-purple)); display:flex;
-  align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(94,92,230,.42);
+  width:46px; height:46px; border-radius:22%; flex:0 0 46px; overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 4px 14px rgba(94,92,230,.42);
 }
-.yz-brand b{ display:block; color:#fff; font-size:1.02rem; font-weight:750; letter-spacing:.01em; line-height:1.1; }
+/* No gradient behind the artwork: the emblem carries its own near-black ground,
+   and a tint underneath it would show as a rim wherever the PNG is transparent. */
+.yz-mark.img{ background:#07070f; }
+.yz-mark img{ width:100%; height:100%; object-fit:cover; display:block; }
+/* Fallback mark only — used when the logo file is missing. */
+.yz-mark.glyph{ background:linear-gradient(135deg,var(--nav-tint),var(--nav-purple)); }
+.yz-brand b{ display:block; color:#fff; font-size:1.32rem; font-weight:800;
+  letter-spacing:-.015em; line-height:1.12; }
 .yz-brand b i{ font-style:normal; color:var(--nav-purple); }
 /* iOS secondaryLabel, the one place a muted tone is correct — it is a caption,
    not a control. */
@@ -251,16 +261,42 @@ def _c(markup: str) -> str:
     return "".join(line.strip() for line in str(markup).splitlines())
 
 
+_LOGO_FILE = Path(__file__).resolve().parents[1] / "assets" / "yesaican_mark.png"
+
+
+@lru_cache(maxsize=1)
+def _brand_mark() -> str:
+    """The sidebar mark: the YES AI CAN emblem, inlined as a data URI.
+
+    Inlined rather than served: the sidebar is injected as raw HTML through
+    st.markdown, and Streamlit only serves files from a static directory that
+    has to be enabled in config. A 30 KB data URI always resolves, on any host
+    and behind any reverse proxy, with no extra request.
+
+    Falls back to the old star glyph if the file is missing, so a checkout that
+    somehow lacks the asset still renders a sidebar rather than a broken image.
+    """
+    try:
+        encoded = base64.b64encode(_LOGO_FILE.read_bytes()).decode("ascii")
+    except OSError:
+        return (
+            "<span class='yz-mark glyph'>"
+            "<svg viewBox='0 0 24 24' width='22' height='22' fill='#fff'>"
+            "<path d='M12 2.6l2.6 6.1 6.6.5-5 4.3 1.5 6.4-5.7-3.4-5.7 3.4 "
+            "1.5-6.4-5-4.3 6.6-.5z'/></svg></span>"
+        )
+    return (
+        f"<span class='yz-mark img'>"
+        f"<img src='data:image/png;base64,{encoded}' alt='YES AI CAN'></span>"
+    )
+
+
 def render_shell(active: str = "", user_name: str = "Avery Chen", user_role: str = "Racker") -> str:
     """HTML for the whole frame. Render once per page, before any content."""
     return SHELL_CSS + _c(f"""
 <div class="yz-sb">
   <div class="yz-brand">
-    <span class="yz-mark">
-      <svg viewBox="0 0 24 24" width="19" height="19" fill="#fff">
-        <path d="M12 2.6l2.6 6.1 6.6.5-5 4.3 1.5 6.4-5.7-3.4-5.7 3.4 1.5-6.4-5-4.3 6.6-.5z"/>
-      </svg>
-    </span>
+    {_brand_mark()}
     <span><b>YES <i>AI</i> CAN</b><span>Community LAB</span></span>
   </div>
   <nav class="yz-nav">{_nav(active)}</nav>

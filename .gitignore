@@ -125,3 +125,6 @@ build/
 # Runtime output from start.sh
 .logs/
 .pids/
+
+# Windows "downloaded from the internet" markers, copied in by WSL
+*:Zone.Identifier
