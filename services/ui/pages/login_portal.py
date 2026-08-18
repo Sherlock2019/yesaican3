@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import List, Dict
 
 from services.ui.utils.meta_store import load_json, save_json
+from services.ui.utils.page_template import page_chrome
 
 
 st.set_page_config(
@@ -51,7 +52,7 @@ def update_human_projects(email: str, project_id: str, action: str) -> None:
         save_humans(humans)
 
 
-st.title("🔐 Login & My Space")
+page_chrome("login_portal", "My Space", "Your profile, submissions and saved work.")
 st.markdown("Manage your profile, projects, and contributions in one place.")
 st.markdown("---")
 

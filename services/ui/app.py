@@ -1,4 +1,4 @@
-# YESAICAN LAB .. the place where problems meet solution , Painpoint meets Cure , People help people
+﻿# YESAICAN LAB .. the place where problems meet solution , Painpoint meets Cure , People help people
 # Main Application Entry Point
 
 from __future__ import annotations
@@ -16,6 +16,12 @@ from urllib.parse import urlencode, urlparse
 
 import streamlit as st
 
+from services.ui.utils import embed_flags
+from services.ui.utils.agent_catalog import DEFAULT_AGENT_CATALOG
+from services.ui.utils.app_shell import render_shell
+from services.ui.utils.auth_gate import require_auth
+from services.ui.utils.challenge_link import normalize_title, resolve_challenge
+from services.ui.utils.home_template import home_template_css
 from services.ui.utils.meta_store import load_json as load_meta_json
 from services.ui.utils.ontology_flow import render_ontology_flowchart
 from services.ui.utils.style import render_nav_bar_app
@@ -28,6 +34,24 @@ from typing import Dict, List, Any
 
 os.environ.setdefault("STREAMLIT_TELEMETRY_DISABLED", "true")
 os.environ.setdefault("STREAMLIT_BROWSER_GATHER_USAGE_STATS", "false")
+
+# The home page *is* the template: the three-step pain-point capture panel and
+# nothing else. Set this to True to restore the previous landing page — the
+# opportunity matrix, feature cards and navigation centre are all still in this
+# file, guarded on this flag rather than deleted.
+SHOW_LEGACY_HOME = False
+
+
+def legacy_style(markup: str) -> None:
+    """Inject a stylesheet that belongs to the legacy landing page only.
+
+    In template mode the page is styled entirely by CAPTURE_CSS and the shell.
+    The sheets routed through here — the 18px global type scale, the neon
+    device picker, the device-preview width override — all overrode those with
+    !important and pulled the layout off the design.
+    """
+    if SHOW_LEGACY_HOME:
+        st.markdown(markup, unsafe_allow_html=True)
 
 BUILDERS_TOOLBOX = [
     {
@@ -57,6 +81,11 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# Gate the app when YESAICAN_AUTH_MODE is configured. No-op by default so this
+# can never lock out an existing deployment; see services/ui/utils/auth_gate.py
+# for why the reverse proxy, not this call, is the real boundary.
+require_auth()
+
 # Prepare the hard-coded title image asset that replaces the uploader flow.
 TITLE_IMAGE_PATH = Path(__file__).parent / "assets" / "uploaded_logo.png"
 
@@ -73,7 +102,7 @@ TITLE_IMAGE_BASE64, TITLE_IMAGE_MIME_TYPE = _load_title_image_data()
 # ============================================
 # 🔧 GLOBAL RESPONSIVE CSS + FULL-SCREEN FIXES
 # ============================================
-st.markdown("""
+legacy_style("""
 <style>
 
 html, body, .block-container {
@@ -232,20 +261,15 @@ button, a, input, select, textarea {
 }
 
 </style>
-""", unsafe_allow_html=True)
+""")
 
-# Sync yes_theme with the shared theme manager so all toggles stay aligned
-shared_theme = get_theme()
-st.session_state["yes_theme"] = st.session_state.get("yes_theme", shared_theme)
-if st.session_state["yes_theme"] != shared_theme:
-    st.session_state["yes_theme"] = shared_theme
-# Keep the page toggle state in sync with the active theme (nav toggle included)
-desired_toggle_state = st.session_state["yes_theme"] == "dark"
-if st.session_state.get("theme_toggle") != desired_toggle_state:
-    st.session_state["theme_toggle"] = desired_toggle_state
-# Keep theme in sync with the toggle state before rendering CSS
-if "theme_toggle" in st.session_state:
-    st.session_state["yes_theme"] = "dark" if st.session_state["theme_toggle"] else "light"
+# The home page is the template, and the template is a light design — there is
+# no dark variant of it. The theme is pinned here rather than left to the shared
+# manager (which defaults to dark) or to a toggle, both of which put the page
+# back on a dark ground that does not match the design.
+set_theme("light")
+st.session_state["yes_theme"] = "light"
+st.session_state["theme_toggle"] = False
 auth_user = st.session_state.get("auth_user")
 
 # ==============================
@@ -253,29 +277,34 @@ auth_user = st.session_state.get("auth_user")
 # ==============================
 
 # Get current theme for styling
-current_theme = st.session_state.get("yes_theme", "dark")
+current_theme = st.session_state.get("yes_theme", "light")
 is_dark = current_theme == "dark"
 
-# Create a small, beautiful dropdown in top-right corner
-col1, col2 = st.columns([5, 1])
-with col2:
-    view_mode = st.selectbox(
-        "Device View Options",
-        [
-            "Desktop Full",
-            "Desktop 1440px",
-            "iPad Pro (1024px)",
-            "iPad (820px)",
-            "iPhone Pro Max (430px)",
-            "iPhone (390px)",
-            "Galaxy S22 (412px)"
-        ],
-        index=0,
-        key="device_view_selector"
-    )
+# The device-preview picker is not in the template, so it is drawn only for the
+# legacy landing page. It is pinned to the corner by CSS, hence the keyed
+# container rather than a columns row: an empty 5/1 row left 75px of dead space
+# under the top bar, the pinned half being out of flow and the other half empty.
+if SHOW_LEGACY_HOME:
+    with st.container(key="device_view_pin"):
+        view_mode = st.selectbox(
+            "Device View Options",
+            [
+                "Desktop Full",
+                "Desktop 1440px",
+                "iPad Pro (1024px)",
+                "iPad (820px)",
+                "iPhone Pro Max (430px)",
+                "iPhone (390px)",
+                "Galaxy S22 (412px)"
+            ],
+            index=0,
+            key="device_view_selector"
+        )
+else:
+    view_mode = "Desktop Full"
 
 # Style the dropdown to be beautiful and small
-st.markdown(f"""
+legacy_style(f"""
 <style>
 /* Position and style the dropdown container */
 div[data-testid="column"]:has(div[data-baseweb="select"]) {{
@@ -484,7 +513,7 @@ observer.observe(document.body, {{ childList: true, subtree: true, attributes: t
 document.addEventListener('click', forceBlackBackground);
 document.addEventListener('focus', forceBlackBackground, true);
 </script>
-""", unsafe_allow_html=True)
+""")
 
 # =====================================
 # 📐 APPLY VIEWPORT BASED ON SELECTION
@@ -505,10 +534,10 @@ device_config = {
 config = device_config.get(view_mode, device_config["Desktop Full"])
 
 # Apply viewport meta tag
-st.markdown(f'<meta name="viewport" content="width={config["viewport"]}, initial-scale=1">', unsafe_allow_html=True)
+legacy_style(f'<meta name="viewport" content="width={config["viewport"]}, initial-scale=1">')
 
 # Apply width styling
-st.markdown(f"""
+legacy_style(f"""
 <style>
 .block-container {{
     padding-top: 4rem !important;
@@ -532,11 +561,11 @@ st.markdown(f"""
     transition-timing-function: ease !important;
 }}
 </style>
-""", unsafe_allow_html=True)
+""")
 
 
-# Hide Streamlit sidebar
-st.markdown("""
+# Hide Streamlit sidebar. In template mode the shell's own CSS already does it.
+legacy_style("""
     <style>
     [data-testid="stSidebar"],
     section[data-testid="stSidebar"],
@@ -550,340 +579,7 @@ st.markdown("""
         padding-left: 0 !important;
     }
     </style>
-""", unsafe_allow_html=True)
-
-LIGHT_CSS = """
-    <style>
-    html, body, .block-container, [data-testid="stAppViewContainer"] {
-        background-color: #ffffff !important;
-        color: #0f172a !important;
-    }
-    .block-container {
-        max-width: 100% !important;
-        padding-left: 2rem !important;
-        padding-right: 2rem !important;
-    }
-    .left-box {
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        border-radius: 20px;
-        padding: 3rem 2rem;
-        color: #0f172a;
-        box-shadow: 6px 0 24px rgba(255, 0, 102, 0.1);
-        border: 2px solid #ff0066;
-        height: fit-content;
-    }
-    .right-box {
-        background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: -6px 0 24px rgba(0, 212, 255, 0.1);
-        border: 2px solid #00d4ff;
-    }
-    .nav-button {
-        display: block;
-        width: 100%;
-        padding: 1rem 1.5rem;
-        margin: 0.5rem 0;
-        background: linear-gradient(135deg, #ff0066 0%, #ff3366 100%);
-        color: white;
-        text-decoration: none;
-        border-radius: 12px;
-        font-weight: 600;
-        font-size: 16px;
-        text-align: center;
-        box-shadow: 0 4px 12px rgba(255, 0, 102, 0.3);
-        transition: all 0.3s;
-        border: none;
-        cursor: pointer;
-    }
-    .nav-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(255, 0, 102, 0.4);
-    }
-    .nav-button-blue {
-        background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
-        box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
-    }
-    .nav-button-blue:hover {
-        box-shadow: 0 8px 24px rgba(0, 212, 255, 0.4);
-    }
-    .hero-wrapper {
-        text-align: center;
-        max-width: 1100px;
-        margin: 0 auto 2rem;
-        padding: 1rem 0;
-    }
-    .hero-title {
-        font-size: 42px;
-        font-weight: 900;
-        color: #ff0066;
-        margin-bottom: 0.5rem;
-        text-shadow: 0 4px 12px rgba(255, 0, 102, 0.2);
-    }
-    .hero-subtitle {
-        font-size: 20px;
-        font-weight: 600;
-        color: #64748b;
-        margin-bottom: 1.5rem;
-    }
-    .hero-body-text {
-        font-size: 18px;
-        line-height: 1.8;
-        color: #0f172a;
-        margin-bottom: 1.5rem;
-    }
-    .feature-card {
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        border: 2px solid #ff0066;
-        border-radius: 16px;
-        padding: 1.5rem;
-        margin: 1rem 0;
-        box-shadow: 0 4px 12px rgba(255, 0, 102, 0.1);
-        transition: all 0.3s;
-    }
-    .feature-card-blue {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        border: 2px solid #00d4ff;
-        box-shadow: 0 4px 12px rgba(0, 212, 255, 0.2);
-    }
-    .feature-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(255, 0, 102, 0.2);
-    }
-    .feature-title {
-        font-size: 22px;
-        font-weight: 700;
-        color: #ff0066;
-        margin-bottom: 0.8rem;
-    }
-    .feature-title-blue {
-        color: #00d4ff;
-    }
-    .feature-text {
-        font-size: 16px;
-        line-height: 1.8;
-        color: #0f172a;
-    }
-    .feature-text-white {
-        color: #e2e8f0;
-    }
-    .stButton > button {
-        border: none !important;
-        cursor: pointer;
-        padding: 14px 28px !important;
-        font-size: 18px !important;
-        font-weight: 700 !important;
-        border-radius: 14px !important;
-        color: #fff !important;
-        background: linear-gradient(135deg, #ff0066 0%, #ff3366 100%) !important;
-        box-shadow: 0 8px 24px rgba(255, 0, 102, 0.35);
-        transition: all 0.3s;
-        width: 100%;
-    }
-    .stButton > button:hover {
-        filter: brightness(1.1);
-        transform: translateY(-2px);
-        box-shadow: 0 12px 32px rgba(255, 0, 102, 0.45) !important;
-    }
-    ul.feature-list {
-        list-style: none;
-        padding-left: 0;
-    }
-    ul.feature-list li {
-        padding: 0.5rem 0;
-        font-size: 16px;
-        line-height: 1.8;
-        color: #334155;
-    }
-    ul.feature-list li:before {
-        content: "✓ ";
-        color: #ff0066;
-        font-weight: 700;
-        margin-right: 0.5rem;
-    }
-    ul.feature-list-white li {
-        color: #e2e8f0;
-    }
-    ul.feature-list-white li:before {
-        color: #00d4ff;
-    }
-    footer {
-        text-align: center;
-        padding: 2rem;
-        color: #64748b;
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin-top: 3rem;
-        border-top: 2px solid #e2e8f0;
-    }
-    </style>
-"""
-
-DARK_CSS = """
-    <style>
-    html, body, .block-container, [data-testid="stAppViewContainer"] {
-        background-color: #0f172a !important;
-        color: #e2e8f0 !important;
-    }
-    .block-container {
-        max-width: 100% !important;
-        padding-left: 2rem !important;
-        padding-right: 2rem !important;
-    }
-    .left-box {
-        background: radial-gradient(circle at top left, #0f172a, #1e293b);
-        border-radius: 20px;
-        padding: 3rem 2rem;
-        color: #f1f5f9;
-        box-shadow: 6px 0 24px rgba(0,0,0,0.45);
-        border: 2px solid #1e293b;
-    }
-    .right-box {
-        background: linear-gradient(180deg, #1e293b, #0f172a);
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: -6px 0 24px rgba(0,0,0,0.35);
-        border: 2px solid #1e293b;
-    }
-    .nav-button {
-        display: block;
-        width: 100%;
-        padding: 1rem 1.5rem;
-        margin: 0.5rem 0;
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-        color: white;
-        text-decoration: none;
-        border-radius: 12px;
-        font-weight: 600;
-        font-size: 16px;
-        text-align: center;
-        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.6);
-        transition: all 0.3s;
-        border: none;
-        cursor: pointer;
-    }
-    .nav-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 28px rgba(37, 99, 235, 0.5);
-    }
-    .nav-button-blue {
-        background: linear-gradient(135deg, #06b6d4 0%, #0ea5e9 100%);
-        box-shadow: 0 6px 18px rgba(8,145,178,0.5);
-    }
-    .nav-button-blue:hover {
-        box-shadow: 0 12px 28px rgba(14, 165, 233, 0.5);
-    }
-    .hero-wrapper {
-        text-align: center;
-        max-width: 1100px;
-        margin: 0 auto 2rem;
-        padding: 1rem 0;
-    }
-    .hero-title {
-        font-size: 42px;
-        font-weight: 900;
-        color: #f0f9ff;
-        margin-bottom: 0.5rem;
-        text-shadow: 0 4px 18px rgba(59,130,246,0.6);
-    }
-    .hero-subtitle {
-        font-size: 20px;
-        font-weight: 600;
-        color: #93c5fd;
-        margin-bottom: 1.5rem;
-    }
-    .hero-body-text {
-        font-size: 18px;
-        line-height: 1.8;
-        color: #e2e8f0;
-        margin-bottom: 1.5rem;
-    }
-    .feature-card {
-        background: rgba(15, 23, 42, 0.85);
-        border: 1px solid rgba(148, 163, 184, 0.3);
-        border-radius: 16px;
-        padding: 1.5rem;
-        margin: 1rem 0;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.35);
-        transition: all 0.3s;
-    }
-    .feature-card-blue {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        border: 1px solid rgba(14, 165, 233, 0.4);
-        box-shadow: 0 8px 24px rgba(14,165,233,0.3);
-    }
-    .feature-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 32px rgba(0,0,0,0.45);
-    }
-    .feature-title {
-        font-size: 22px;
-        font-weight: 700;
-        color: #f0abfc;
-        margin-bottom: 0.8rem;
-    }
-    .feature-title-blue {
-        color: #67e8f9;
-    }
-    .feature-text {
-        font-size: 16px;
-        line-height: 1.8;
-        color: #e2e8f0;
-    }
-    .feature-text-white {
-        color: #e2e8f0;
-    }
-    .stButton > button {
-        border: none !important;
-        cursor: pointer;
-        padding: 14px 28px !important;
-        font-size: 18px !important;
-        font-weight: 700 !important;
-        border-radius: 14px !important;
-        color: #fff !important;
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
-        box-shadow: 0 12px 32px rgba(37, 99, 235, 0.45);
-        transition: all 0.3s;
-        width: 100%;
-    }
-    .stButton > button:hover {
-        filter: brightness(1.05);
-        transform: translateY(-2px);
-        box-shadow: 0 16px 36px rgba(37, 99, 235, 0.55) !important;
-    }
-    ul.feature-list {
-        list-style: none;
-        padding-left: 0;
-    }
-    ul.feature-list li {
-        padding: 0.5rem 0;
-        font-size: 16px;
-        line-height: 1.8;
-        color: #cbd5f5;
-    }
-    ul.feature-list li:before {
-        content: "✓ ";
-        color: #38bdf8;
-        font-weight: 700;
-        margin-right: 0.5rem;
-    }
-    ul.feature-list-white li {
-        color: #cbd5f5;
-    }
-    ul.feature-list-white li:before {
-        color: #38bdf8;
-    }
-    footer {
-        text-align: center;
-        padding: 2rem;
-        color: #94a3b8;
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin-top: 3rem;
-        border-top: 1px solid rgba(148,163,184,0.2);
-    }
-    </style>
-"""
+""")
 
 
 PAGES_DIR = Path(__file__).parent / "pages"
@@ -911,10 +607,16 @@ ACRONYM_TOKENS = {
 
 
 def _normalize_launch_base(raw_value: Optional[str]) -> str:
-    fallback = f"http://localhost:{LAUNCH_PORT}"
+    """Absolute origin for outbound links, or "" to keep them same-origin.
+
+    Same-origin is the default and the right answer for almost every
+    deployment: the app is reached on whatever host the browser already used,
+    so a relative link always lands. Only set LAUNCH_BASE_URL when links must
+    point at a *different* host than the one serving the page.
+    """
     candidate = (raw_value or "").strip()
     if not candidate:
-        return fallback
+        return ""
     if not re.match(r"^https?://", candidate):
         candidate = f"http://{candidate}"
     candidate = candidate.rstrip("/")
@@ -924,7 +626,7 @@ def _normalize_launch_base(raw_value: Optional[str]) -> str:
         if parsed.port is None and LAUNCH_PORT:
             host = f"{host}:{LAUNCH_PORT}"
         return host
-    return fallback
+    return ""
 
 
 def _slugify_page_stem(stem: str) -> str:
@@ -955,11 +657,11 @@ def load_page_slugs(pages_dir: Path) -> dict[str, str]:
 
 
 LAUNCH_BASE_URL = _normalize_launch_base(
-    os.getenv("LAUNCH_BASE_URL") or os.getenv("LAUNCH_HOST") or "http://119.9.127.11:8054/"
+    os.getenv("LAUNCH_BASE_URL") or os.getenv("LAUNCH_HOST") or ""
 )
-CHALLENGE_FORM_BASE_URL = os.getenv(
-    "HOW_CAN_AI_HELP_FORM_BASE",
-    "http://119.9.127.11:8054/how_can_ai_help",
+CHALLENGE_FORM_BASE_URL = (
+    os.getenv("HOW_CAN_AI_HELP_FORM_BASE", "").strip().rstrip("/")
+    or f"{LAUNCH_BASE_URL}/how_can_ai_help"
 )
 PAGE_SLUGS = load_page_slugs(PAGES_DIR)
 
@@ -1103,31 +805,23 @@ def ensure_page_file_for_key(page_key: str) -> None:
     ensure_page_file(candidate)
 
 def render_theme_styles():
-    css = DARK_CSS if st.session_state.get("yes_theme", "dark") == "dark" else LIGHT_CSS
-    st.markdown(css, unsafe_allow_html=True)
+    """Draw the shared application frame (fixed sidebar + top bar).
+
+    The page's own skin is applied later, in render_home_template_styles, so it
+    lands after BASE_CSS and wins. Only the frame goes here — it is position
+    fixed, so where it sits in the document does not affect the layout.
+    """
+    # In template mode the capture panel draws the shell itself, so drawing it
+    # here too would stack a second fixed sidebar on top of the first.
+    if SHOW_LEGACY_HOME:
+        st.markdown(render_shell(active=""), unsafe_allow_html=True)
 
 # Call the theme renderer (keep this line outside the function definition)
 render_theme_styles()
 
-# ============================================
-# 🔧 HERO WRAPPER (Full-Responsive Hero Image)
-# ============================================
-
-# Determine logo source
-if TITLE_IMAGE_BASE64:
-    logo_src = f"data:{TITLE_IMAGE_MIME_TYPE};base64,{TITLE_IMAGE_BASE64}"
-else:
-    # Fallback to a default image if no logo uploaded
-    logo_src = "https://via.placeholder.com/1600x400/1E88E5/FFFFFF?text=YESAICAN+LAB"
-
-# Hero image (logo 100% bigger = 2x scale)
-st.markdown(f"""
-<div style="position: relative; width: 100%; text-align: center; margin-bottom: 2rem;">
-    <img src="{logo_src}" style="width:100%; max-width:1600px; height:auto; border-radius: 32px; box-shadow: 0 0 25px rgba(0, 200, 255, 0.75), 0 0 55px rgba(255, 0, 200, 0.55); transform: scale(2); transform-origin: center;">
-</div>
-""", unsafe_allow_html=True)
-
-# Logo upload button removed to prevent reload loop
+# The neon hero logo is gone: the template has no hero image, and the brand
+# already reads in the sidebar mark. The asset itself is untouched on disk at
+# services/ui/assets/uploaded_logo.png if it is ever wanted back.
 
 # def render_theme_styles():
 #     css = DARK_CSS if st.session_state.get("yes_theme", "dark") == "dark" else LIGHT_CSS
@@ -1681,9 +1375,45 @@ BASE_CSS = """
 </style>
 """
 
-st.markdown(BASE_CSS, unsafe_allow_html=True)
-# Home page should not display nav buttons
-render_nav_bar_app(show_nav_buttons=False)
+legacy_style(BASE_CSS)
+
+
+def render_home_template_styles() -> None:
+    """Re-skin the legacy home markup onto the template design.
+
+    Only used by the legacy landing page. In template mode the capture panel
+    brings its own CAPTURE_CSS, and layering this override on top of it would
+    have the two sheets fighting over the same buttons and containers.
+    """
+    if not SHOW_LEGACY_HOME:
+        return
+    st.markdown(
+        home_template_css("light", config["max_width"]),
+        unsafe_allow_html=True,
+    )
+
+
+def render_home_capture_panel() -> None:
+    """Render the pain-point capture template as the whole home page.
+
+    Imported from the Pain Points page rather than copied, so the two views
+    cannot drift. The flag is raised only across the import — that is the only
+    moment the guard in that module is evaluated — and lowered again straight
+    after, otherwise navigating to the Pain Points page in this same process
+    would find it still raised and skip its own feed.
+    """
+    embed_flags.CAPTURE_EMBEDDED = True
+    try:
+        from services.ui.pages import how_can_ai_help as capture
+    finally:
+        embed_flags.CAPTURE_EMBEDDED = False
+    capture.render_pain_point_capture(capture.load_submissions(), active="")
+
+
+render_home_template_styles()
+if SHOW_LEGACY_HOME:
+    # Home page should not display nav buttons
+    render_nav_bar_app(show_nav_buttons=False)
 
 
 def go_to_page(page_path: str) -> None:
@@ -1748,12 +1478,12 @@ def render_help_intro() -> None:
     st.markdown(
         """
         <div class="neon-table" style="margin-bottom:1.5rem;">
-            <div class="neon-table-title" style="font-size:1.4rem;">
+            <div class="neon-table-title" style="font-size:1.05rem;line-height:1.6;">
                 🔥 1- Submit your painpoints or ideas to improve your tasks
                     2- Find Great people and Team who will build FOR and WITH You a Solution that will put a Smile on your Face
                     3- and if it s a great solution , We will share it in the Production Library for US and for our Customers- By putting all our ideas and talents Together , We all Build a  better Services , a Better Company Culture and Business, get More Happier Customers and Build a Better World !
             </div>
-            <p style="color:rgba(226,232,240,0.9);">
+            <p>
                 Share real customer or team pain points, let Ambassadors propose AI cures, and convert the best submissions into Customer ONE projects.
             </p>
         </div>
@@ -1762,8 +1492,80 @@ def render_help_intro() -> None:
     )
 
 
+SUBMIT_CTA_CSS = """
+<style>
+.pp-cta-wrap { margin: 0 0 1.25rem; }
+.pp-cta-wrap .stButton > button {
+    width: 100%;
+    background: var(--yz-indigo) !important;
+    color: #fff !important;
+    border: 1px solid var(--yz-indigo) !important;
+    border-radius: 12px !important;
+    padding: 0.85rem 1.25rem !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.01em;
+    box-shadow: 0 4px 12px rgba(91,63,214,0.28) !important;
+    transition: background 0.15s ease;
+}
+.pp-cta-wrap .stButton > button:hover {
+    background: var(--yz-indigo-dark) !important;
+    color: #fff !important;
+    transform: none !important;
+}
+.pp-cta-wrap .stButton > button:focus-visible { outline: 3px solid var(--yz-indigo-wash); outline-offset: 2px; }
+.pp-cta-note { font-size: 0.83rem; color: var(--yz-ink-faint); margin: 0.4rem 0 0; text-align: center; }
+</style>
+"""
+
+# The entry point to the whole innovation funnel. It appears at the top of the
+# home page and again beside the navigation, so it is reachable from anywhere
+# without hunting through page shortcuts.
+def render_submit_cta(origin: str = "home", note: str | None = None) -> None:
+    st.markdown(SUBMIT_CTA_CSS, unsafe_allow_html=True)
+    st.markdown("<div class='pp-cta-wrap'>", unsafe_allow_html=True)
+    # type="primary" rather than the .pp-cta-wrap rule: Streamlit renders each
+    # element as its own sibling, so the bare opening div above never actually
+    # contains the button and the wrapper's styling never reached it.
+    if st.button("➕  Submit Pain Point", key=f"submit_pain_point_{origin}",
+                 type="primary", use_container_width=True):
+        go_to_page("pages/how_can_ai_help.py")
+    st.markdown(
+        f"<p class='pp-cta-note'>{html.escape(note or 'One sentence is enough — we work out the rest with you.')}</p>",
+        unsafe_allow_html=True,
+    )
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+# Item 12 of the redesign: the funnel, named for what each stage does, rather
+# than a flat list of every page in the app.
+LAB_SECTIONS = [
+    ("🎯 Opportunity Radar", "pages/how_can_ai_help.py", "Every pain point, scored by hours lost and reuse available."),
+    ("🍏 Quick Wins", "pages/how_can_ai_help.py", "Cheap, proven, wide-reach — what to build next."),
+    ("🧩 Challenges", "pages/challenge_hub.py", "Open problems waiting for a solution finder."),
+    ("📁 Projects", "pages/project_hub.py", "Prototypes, MVPs, and production launches."),
+    ("🤖 AI Agents", "pages/agent_library.py", "The reusable library, Customer ZERO to Customer ONE."),
+    ("👤 Human Stack", "pages/human_stack.py", "Who knows what — skills, SMEs, and portfolios."),
+    ("📊 Value Dashboard", "pages/admin_rex.py", "Before → Target → Actual across everything shipped."),
+]
+
+
+def render_lab_navigation() -> None:
+    st.markdown("### 🧭 YES AI CAN LAB")
+    render_submit_cta("nav")
+    for label, path, desc in LAB_SECTIONS:
+        if st.button(label, key=f"lab_nav_{slugify_label(label)}", use_container_width=True):
+            go_to_page(path)
+        st.caption(desc)
+
+
 def render_primary_navigation_buttons() -> None:
-    st.markdown("### 🔗 Page Shortcuts")
+    render_lab_navigation()
+    with st.expander("All page shortcuts"):
+        render_all_page_shortcuts()
+
+
+def render_all_page_shortcuts() -> None:
     nav_items = [
         ("👤 Human Stack", "pages/human_stack.py", "See every profile, skill, and SME."),
         ("📁 Project Hub", "pages/project_hub.py", "Review prototypes and MVPs."),
@@ -1813,7 +1615,7 @@ SAMPLE_HELP_SUBMISSIONS = [
             "region": "APAC",
             "role": "Billing Ops",
         },
-        "description": "Need a formatter that aligns any customer-specific billing layout to the Rackspace billing schema automatically.",
+        "description": "Need a formatter that aligns any customer-specific billing layout to the our Community billing schema automatically.",
         "attachments": [],
         "category": "Finance",
         "difficulty": "Easy",
@@ -2120,8 +1922,8 @@ SAMPLE_HELP_SOLUTIONS = [
     },
 ]
 
-HOW_CAN_AI_HELP_URL = "http://119.9.127.11:8054/how_can_ai_help"
-PROJECT_HUB_URL = "http://119.9.127.11:8054/project_hub"
+HOW_CAN_AI_HELP_URL = f"{LAUNCH_BASE_URL}/how_can_ai_help"
+PROJECT_HUB_URL = f"{LAUNCH_BASE_URL}/project_hub"
 
 
 CHALLENGE_FEED_ROWS = [
@@ -2525,68 +2327,8 @@ PROPOSED_SOLUTION_ROWS = [
     },
 ]
 
-DEFAULT_AGENT_CATALOG = [
-    (
-        "Agent Factory",
-        "🧩 Agent Builder",
-        "🧩 Agent Builder",
-        "Build custom agents by combining functions from HF and existing agents like LEGO blocks.",
-        "Available",
-        "🧩",
-        True,
-        "dzoan.nguyen@rackspace.com",
-        "2025-11-27",
-        "v1.0.0",
-    ),
-    (
-        "Model Operations",
-        "🤖 Hugging Face Tools",
-        "🤖 HF Agent Wrapper",
-        "Pure HuggingFace operations — Local HF models + HF API. Lightweight, HF-focused solution for all HF tasks.",
-        "Available",
-        "🤖",
-        False,
-        "dzoan.nguyen@rackspace.com",
-        "2025-11-27",
-        "v1.0.0",
-    ),
-    (
-        "Executive Dashboards",
-        "🚗 Boardroom Intelligence",
-        "🚗 CEO driver DASHBOARD",
-        "Real-time AI cockpit for CEOs to steer revenue, cash, ops, and market moves.",
-        "Available",
-        "🚗",
-        False,
-        "dzoan.nguyen@rackspace.com",
-        "2025-11-27",
-        "v1.0.0",
-    ),
-    (
-        "Retail Banking Suite",
-        "Retail Banking Suite",
-        "💬 Chatbot Assistant",
-        "Context-aware embedded assistant.",
-        "Available",
-        "💬",
-        False,
-        "dzoan.nguyen@rackspace.com",
-        "2025-11-27",
-        "v1.0.0",
-    ),
-    (
-        "Support & Security",
-        "🧠 Troubleshooting",
-        "🧠 IT Troubleshooter Agent",
-        "First-principles + case-memory incident solver.",
-        "Available",
-        "🧠",
-        False,
-        "dzoan.nguyen@rackspace.com",
-        "2025-11-27",
-        "v1.0.0",
-    ),
-]
+# Catalog now lives in services/ui/utils/agent_catalog.py so the challenge
+# intake form can match against the same list (imported at the top of the file).
 
 ALLOWED_AGENT_ROUTE_NAMES = {
     "agent_builder",
@@ -2967,7 +2709,7 @@ SAMPLE_PROJECTS = [
         "title": "CX Sentiment Heatmap",
         "authors": ["Lila Moreno"],
         "business_area": "Customer Success",
-        "summary": "Streaming sentiment insights for Rackspace customer boards.",
+        "summary": "Streaming sentiment insights for our Community customer boards.",
         "created_at": "2024-07-25",
         "status": "Incubation",
         "upvotes": 11,
@@ -3095,13 +2837,41 @@ SAMPLE_SEARCH = [
 ]
 
 
+# Seeded fixtures keep the app demonstrable before real data arrives, but they
+# must never masquerade as real submissions. Set YESAICAN_DEMO_DATA=0 to serve
+# only genuine records; when fixtures are served they are tagged `_sample`, and
+# every roll-up reports real and sample counts separately.
+DEMO_DATA_ENABLED = os.getenv("YESAICAN_DEMO_DATA", "1").strip().lower() not in {
+    "0",
+    "false",
+    "no",
+    "off",
+}
+
+
+def _tag_samples(sample: list[dict]) -> list[dict]:
+    tagged: list[dict] = []
+    for record in sample:
+        if isinstance(record, dict):
+            marked = dict(record)
+            marked["_sample"] = True
+            tagged.append(marked)
+    return tagged
+
+
+def is_sample_record(record: Any) -> bool:
+    return bool(isinstance(record, dict) and record.get("_sample"))
+
+
 def load_meta_records(filename: str, sample: list[dict]) -> list[dict]:
+    """Live records from the meta store, or tagged fixtures when there are none."""
+    fallback = _tag_samples(sample) if DEMO_DATA_ENABLED else []
     try:
-        data = load_meta_json(filename, sample)
+        data = load_meta_json(filename, None)
     except Exception:
-        return sample
+        return fallback
     if not data:
-        return sample
+        return fallback
     if isinstance(data, dict):
         for key in ("items", "records", "data"):
             if key in data and isinstance(data[key], list):
@@ -3385,12 +3155,15 @@ def build_page_url(page_key: str, params: dict[str, Any] | None = None) -> str:
 
 
 def ensure_absolute_page_url(url: str) -> str:
+    """Prefix a page URL with the configured origin.
+
+    With no origin configured (the default) this returns a root-relative URL,
+    which resolves against whatever host the browser is already on.
+    """
     if not url:
-        return LAUNCH_BASE_URL
+        return LAUNCH_BASE_URL or "/"
     if url.startswith(("http://", "https://")):
         return url
-    if url.startswith("/"):
-        return f"{LAUNCH_BASE_URL}{url}"
     return f"{LAUNCH_BASE_URL}/{url.lstrip('/')}"
 
 
@@ -3850,19 +3623,25 @@ def render_help_submission_table() -> list[dict]:
 def render_help_solution_table() -> None:
     rows: list[list[str]] = []
     submissions = load_meta_records("how_ai_help_submissions.json", CHALLENGE_FEED_ROWS)
-    submission_titles = {str(item.get("title", "")).strip().lower() for item in submissions if item.get("title")}
     solutions = load_meta_records("how_ai_help_solutions.json", PROPOSED_SOLUTION_ROWS)
     for entry in solutions:
-        challenge_title = str(entry.get("challenge", "")).strip().lower()
-        if submission_titles and challenge_title not in submission_titles:
-            continue
+        # Resolve by id, falling back to a whitespace-tolerant title match.
+        # An unresolved solution is shown and flagged, never dropped — someone
+        # did that work and hiding it is how contributions go missing.
+        matched = resolve_challenge(entry, submissions)
         ensure_solution_anchor(entry)
         detail_url = build_solution_view_url(entry)
         submitter_name = entry.get("submitter") or entry.get("author") or "—"
         helper_name = entry.get("helper") or entry.get("author") or "—"
+        challenge_cell = html.escape(entry.get("challenge", "—"))
+        if not matched:
+            challenge_cell += (
+                "<br><small title='This solution names a challenge that no longer matches any "
+                "submission — re-link it from the challenge page.'>⚠️ not linked to a challenge</small>"
+            )
         rows.append(
             [
-                html.escape(entry.get("challenge", "—")),
+                challenge_cell,
                 html.escape(submitter_name),
                 html.escape(helper_name),
                 html.escape(entry.get("approach", "—")),
@@ -4967,12 +4746,7 @@ def render_agent_library_table(current_agents, feedback_data):
         comments = len(fb.get("comments", []))
         launch_path = resolve_agent_launch_path(route_name, launch_overrides)
         if launch_path:
-            if launch_path.startswith(("http://", "https://")):
-                href = launch_path
-            elif launch_path.startswith("/"):
-                href = launch_path
-            else:
-                href = f"{LAUNCH_BASE_URL}{launch_path}"
+            href = ensure_absolute_page_url(launch_path)
             action = build_action_stack("Launch", href, "Edit / View")
         else:
             action = "<div class='action-stack'><span class='status-badge warning'>Coming Soon</span></div>"
@@ -5207,161 +4981,8 @@ def render_global_search_table():
     render_neon_table("🔍 Unified Search Index", columns, rows, "Search index will refresh once metadata is ingested.")
 
 
-def render_hero_section(auth_user: dict | None) -> None:
-    st.markdown("<div class='left-box'>", unsafe_allow_html=True)
-    st.markdown(
-        """
-        <style>
-        /* Overall dark background for the neon effect */
-        body {
-            background-color: #0d0d1a !important;
-        }
-
-        .neon-sign-wrapper {
-            margin: 50px auto;
-            padding: 30px;
-            width: 90%;
-            max-width: 900px;
-            box-sizing: border-box;
-            position: relative;
-            border-radius: 20px;
-            border: 4px solid #00ffff;
-            box-shadow:
-                0 0 10px #00ffff,
-                0 0 30px #00ffff,
-                0 0 60px #00ffff,
-                0 0 100px rgba(0, 255, 255, 0.5);
-        }
-
-        .neon-sign-inner {
-            background-color: #1a0d1a;
-            padding: 40px 30px;
-            border-radius: 15px;
-            border: 3px solid #ff00ff;
-            box-shadow:
-                0 0 8px #ff00ff,
-                0 0 20px #ff00ff,
-                0 0 40px rgba(255, 0, 255, 0.5);
-        }
-
-        .neon-title,
-        .neon-subtitle {
-            font-family: 'Arial Black', sans-serif;
-            font-weight: 900;
-            color: #ffffff;
-            text-align: center;
-            margin: 0;
-            margin-bottom: 0.2em;
-            text-shadow:
-                0 0 5px #ff00ff,
-                0 0 15px #ff00ff,
-                0 0 25px rgba(255, 0, 255, 0.8),
-                0 0 40px rgba(255, 0, 255, 0.6);
-        }
-
-        .neon-title {
-            font-size: 3.5em;
-        }
-
-        .neon-subtitle {
-            font-size: 3.2em;
-        }
-
-        .neon-description {
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 1.5em;
-            line-height: 1.4;
-            color: #ffffff;
-            text-align: center;
-            max-width: 700px;
-            margin: 0.8em auto 0;
-            text-shadow:
-                0 0 4px #ff00ff,
-                0 0 10px rgba(255, 0, 255, 0.7);
-        }
-
-        .neon-home-icon {
-            font-size: 1.2em;
-            vertical-align: middle;
-            margin-right: 0.15em;
-            filter: drop-shadow(0 0 8px #00ffff) drop-shadow(0 0 16px #00ffff);
-        }
-        </style>
-
-        <div class="neon-sign-wrapper">
-            <div class="neon-sign-inner">
-                <div class="neon-title">
-                    <span class="neon-home-icon">🏠</span> The YES AI CAN
-                </div>
-                <div class="neon-subtitle">Community LAB</div>
-                <div class="neon-description">
-                    The Community Place where Great People help other People be more<br>
-                    Productive–Creative, Better and Happier — while helping Others bring<br>
-                    their Ideas to Life.
-                </div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        """
-        <div class="feature-card">
-            <div class="feature-title">YES AI CAN is built to:</div>
-            <ul class="feature-list">
-                <li>Map global AI & domain expertise.</li>
-                <li>Showcase prototypes, MVPs, and production launches.</li>
-                <li>Provide neon-fast zero-code tooling for explainable agents.</li>
-                <li>Accelerate reuse from Customer ZERO to Customer ONE.</li>
-                <li>Connect Ambassadors, SMEs, and dreamers across regions.</li>
-            </ul>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.markdown(
-        """
-        <div class="feature-card feature-card-blue">
-            <div class="feature-title feature-title-blue">💡 Why Now?</div>
-            <p class="feature-text feature-text-white">
-                Rackspace has <strong style="color:#00d4ff;">5,000+ hidden superpowers.</strong>
-                YES AI CAN discovers them and gives every Racker the platform to say “YES, AI CAN.”
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        """
-        <div class="feature-card">
-            <div class="feature-title">🧱 What You Can Do Here</div>
-            <h4>💬 As a User — Life Improver</h4>
-            <p><strong>Submit a Pain Point or Workflow — “How Can AI Help?”</strong><br>
-            Share any challenge, repetitive task, manual workflow, or inefficiency in your daily work.<br>
-            Your submission becomes a real challenge for the community to solve — together.</p>
-            <p><strong>Report Any Pain Point, Improvement Need, or Idea</strong><br>
-            Tell the community what slows you down, what’s broken, or what could be better.<br>
-            Every idea becomes fuel for the next internal AI tool, automation, or workflow upgrade.</p>
-            <h4>🛠️ As a Solution Finder or Builder — Solve Real Rackers’ Problems</h4>
-            <p>Step in to help your teammates by designing or proposing AI-powered solutions.<br>
-            Use zero-code tools or your technical skills to:</p>
-            <ul class="feature-list">
-                <li>Automate repetitive tasks</li>
-                <li>Streamline complex workflows</li>
-                <li>Improve accuracy and efficiency</li>
-                <li>Reduce frustration</li>
-                <li>Make someone’s day easier — and happier</li>
-            </ul>
-            <p>Every problem submitted is an opportunity for you to build something impactful.</p>
-            <h4>👉 Next Action: Create Your Human Stack Profile</h4>
-            <p><strong>👤 Create your Human Stack Profile</strong> — Showcase your skills, domain expertise, role & department, resume, AI experience, and the projects you’ve built or contributed to.<br>
-            Your profile helps others find you, collaborate with you, and invite you to solve challenges that match your strengths.</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown("</div>", unsafe_allow_html=True)
+# render_hero_section() removed: nothing ever called it, and the copy inside
+# was a stale duplicate of the hero cards rendered in the left column below.
 
 
 def render_navigation_center(current_agents, feedback_data, auth_user) -> None:
@@ -5630,172 +5251,846 @@ def render_future_modules():
     # st.markdown("</div>", unsafe_allow_html=True)
     # st.markdown("</div>", unsafe_allow_html=True)
 # ============================================================
-# MAIN LAYOUT: LEFT PANEL (Hero) + RIGHT PANEL (Navigation)
+# OPPORTUNITY MATRIX — Complexity vs Results vs BU reach
 # ============================================================
+# Answers one question at the top of the home page: of every pain point the
+# community has submitted, which ones are cheap to build, actually proven, and
+# useful to the most business units? Those are the lowest hanging fruit.
 
-# Global hero replaced by the neon sign rendered above.
-# Two-column layout
-c1, c2 = st.columns([1.1, 1.9], gap="large")
+# Effort baseline per declared difficulty (1 = trivial, 10 = major programme).
+# Covers the submission form's own vocabulary plus the `ai_baseline.complexity`
+# wording ("Low"/"Medium"/"High"), so live records score off the same scale.
+MATRIX_DIFFICULTY_BASE = {
+    "trivial": 1.5,
+    "very easy": 1.5,
+    "easy": 2.5,
+    "low": 2.5,
+    "medium": 5.5,
+    "moderate": 5.5,
+    "hard": 8.5,
+    "high": 8.5,
+    "very hard": 9.5,
+    "critical": 9.5,
+    "extreme": 9.5,
+}
 
-# LEFT PANEL — Hero Message
-with c1:
-    st.markdown("<div class='left-box'>", unsafe_allow_html=True)
+# Fallback when a submission carries a qualitative `impact_level` but no numeric
+# `impact_score`.
+MATRIX_IMPACT_LEVEL = {"low": 4.0, "medium": 6.5, "high": 8.5, "critical": 9.5}
 
-    st.markdown("""
-        <div class="feature-card">
-            <div class="feature-title">🌌 What YES AI CAN Is</div>
-            <p class="feature-text">
-                YES AI CAN is Rackspace’s AI Foundry + Community Agent Factory, built to:
-            </p>
-            <ul class="feature-list">
-                <li>🧠 Mine our global superpowers — map every skill, SME, and domain expert</li>
-                <li>🔍 Collect real business pain points — Kaggle-style challenge submissions</li>
-                <li>🚀 Turn problems into agents — Customer ZERO → Customer ONE blueprints</li>
-                <li>🪄 Give zero-code tools for creating explainable AI agents instantly</li>
-                <li>🤝 Connect Ambassadors, SMEs, engineers, and innovators</li>
-                <li>♻️ Accelerate reuse through a shared, governed agent library</li>
-                <li>🏗️ Power the next generation of OpenStack + private AI solutions</li>
-                <li>🌏 Unite Rackers globally into one open innovation community</li>
-            </ul>
-        </div>
-    """, unsafe_allow_html=True)
+# How much a proposed solution's delivery stage counts as "pain point actually
+# solved". A Draft is an opinion; an MVP is evidence.
+MATRIX_PROOF_WEIGHT = {
+    "": 0.25,
+    "draft": 0.45,
+    "incubation": 0.55,
+    "prototype": 0.70,
+    "mvp": 0.90,
+    "mvp ready": 1.00,
+}
 
-    st.markdown("""
-        <div class="feature-card feature-card-blue">
-            <div class="feature-title feature-title-blue">💡 Why We Exist</div>
-            <p class="feature-text feature-text-white">
-                Rackspace has 5,000+ hidden superpowers — unique skills, ideas, and lived experiences waiting to be unlocked. YES AI CAN is the place where those superpowers become visible: in profiles, in projects, in prototypes, in agents, in solutions, and in community.
-            </p>
-            <p class="feature-text feature-text-white" style="margin-top: 1rem;">
-                Our mission: Give every Racker — regardless of background — the confidence, tools, and platform to say: <strong style="color: #00d4ff;">“YES, AI CAN — and so can I.”</strong>
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+# A challenge is "cheap enough to start now" at or below Medium difficulty.
+MATRIX_COMPLEXITY_CUT = 5.0
 
-    st.markdown("""
-        <div class="feature-card">
-            <div class="feature-title">🧩 Challenge & Solution Flow</div>
-            <p><strong>As User / Live Improver</strong></p>
-            <ul class="feature-list">
-                <li>Submit any pain point or workflow (“How Can AI Help?”)</li>
-                <li>Report improvement needs or new ideas to the community</li>
-            </ul>
-            <p><strong>As Solution Finder / Builder</strong></p>
-            <ul class="feature-list">
-                <li>Help Rackers solve real-life problems</li>
-                <li>Build AI tools that improve tasks, workflows, and happiness</li>
-            </ul>
-            <p><strong>Next action</strong></p>
-            <p>Create your Human Stack Profile (skills, experience, resume, expertise)</p>
-        </div>
-    """, unsafe_allow_html=True)
+# Emphasis palette. Validated with the dataviz palette validator against this
+# app's own surfaces (dark #0f172a, light #f8fafc), all-pairs mode: adjacent CVD
+# ΔE 16.7 dark / 15.9 light, normal-vision ΔE 17.1 / 17.8, both clear 3:1 on
+# their surface. The de-emphasis step is deliberately achromatic — this is an
+# emphasis chart, so everything that is not a recommendation must read as gray.
+MATRIX_THEME = {
+    "dark": {
+        "surface": "#0f172a",
+        "accent": "#3987e5",
+        "muted_mark": "#7d7d78",
+        "ink": "#ffffff",
+        "ink_secondary": "#c3c2b7",
+        "grid": "rgba(255,255,255,0.10)",
+        "axis": "rgba(255,255,255,0.20)",
+    },
+    # Light values sit on the template's white card surface rather than the old
+    # slate wash, so the matrix reads as one of the page's cards.
+    "light": {
+        "surface": "#ffffff",
+        "accent": "#5b3fd6",
+        "muted_mark": "#898781",
+        "ink": "#1a1a2e",
+        "ink_secondary": "#5a5a75",
+        "grid": "rgba(26,26,46,0.10)",
+        "axis": "rgba(26,26,46,0.22)",
+    },
+}
 
-    st.markdown("""
-        <div class="feature-card">
-            <div class="feature-title">🧱 What You Can Do Here</div>
-            <h4>💬 As a User — Live Improver</h4>
-            <p><strong>Submit a Pain Point or Workflow — “How Can AI Help?”</strong><br>
-            Share any challenge, repetitive task, manual workflow, or inefficiency in your daily work.<br>
-            Your submission becomes a real challenge for the community to solve — together.</p>
-            <p><strong>Report Any Pain Point, Improvement Need, or Idea</strong><br>
-            Tell the community what slows you down, what’s broken, or what could be better.<br>
-            Every idea becomes fuel for the next internal AI tool, automation, or workflow upgrade.</p>
-            <h4>🛠️ As a Solution Finder or Builder — Solve Real Rackers’ Problems</h4>
-            <p>Step in to help your teammates by designing or proposing AI-powered solutions.<br>
-            Use zero-code tools or your technical skills to:</p>
-            <ul class="feature-list">
-                <li>Automate repetitive tasks</li>
-                <li>Streamline complex workflows</li>
-                <li>Improve accuracy and efficiency</li>
-                <li>Reduce frustration</li>
-                <li>Make someone’s day easier — and happier</li>
-            </ul>
-            <p>Every problem submitted is an opportunity for you to build something impactful.</p>
-            <h4>👉 Next Action: Create Your Human Stack Profile</h4>
-            <p><strong>👤 Create your Human Stack Profile</strong> — Showcase your skills, domain expertise, role & department, resume, AI experience, and the projects you’ve built or contributed to.<br>
-            Your profile helps others find you, collaborate with you, and invite you to solve challenges that match your strengths.</p>
-        </div>
-    """, unsafe_allow_html=True)
 
-    st.markdown("""
-        <div class="feature-card feature-card-blue">
-            <div class="feature-title feature-title-blue">🚀 Built for You</div>
-            <p class="feature-text feature-text-white">
-                Whether you're an engineer, analyst, salesperson, manager, operator, or creator — YES AI CAN is your footstool into AI, designed for zero fear, zero barriers, zero cost, maximum clarity, maximum support, maximum impact.
-            </p>
-            <p class="feature-text feature-text-white" style="margin-top: 1rem;">
-                This is how Rackspace builds a future where AI is safe, transparent, explainable, human-centered, and globally collaborative.
-            </p>
-            <p class="feature-text feature-text-white" style="margin-top: 1rem; text-align: center; font-size: 18px; font-weight: 600; color: #00d4ff;">
-                🫂 Welcome to the Future of Human-Centered AI at Rackspace<br>
-                Here, ideas turn into prototypes. Prototypes turn into agents. Agents turn into products. And Rackers turn into creators.
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
-    render_primary_navigation_buttons()
-    # Duplicate call with similar content exists elsewhere; keeping left panel lighter by
-    # skipping the extra “Jump into Forms & Workspaces” block for now.
-    # render_form_navigation_buttons()
+def _matrix_key(title: Any) -> str:
+    """Whitespace/case-insensitive title key (shared with challenge_link)."""
+    return normalize_title(title)
 
-    st.markdown("</div>", unsafe_allow_html=True)
 
-# RIGHT PANEL — Navigation and Home Page Layers
-with c2:
-    st.markdown("<div class='right-box'>", unsafe_allow_html=True)
+def _matrix_reusable_agents(item: dict, enriched: dict) -> list[str]:
+    """Existing agents this pain point could reuse.
+
+    Checks the top-level field first, then the AI baseline the intake flow
+    generates — live submissions populate only the latter.
+    """
+    baseline = item.get("ai_baseline")
+    sources = [
+        item.get("similar_agents"),
+        enriched.get("similar_agents"),
+        baseline.get("similar_agents") if isinstance(baseline, dict) else None,
+    ]
+    agents: list[str] = []
+    for source in sources:
+        for name in source or []:
+            cleaned = str(name).strip()
+            if cleaned and cleaned not in agents:
+                agents.append(cleaned)
+    return agents
+
+
+def _matrix_difficulty(item: dict, enriched: dict) -> tuple[str, float]:
+    """Declared difficulty and its effort baseline, falling back to the AI baseline."""
+    baseline = item.get("ai_baseline")
+    candidates = [
+        item.get("difficulty"),
+        enriched.get("difficulty"),
+        baseline.get("complexity") if isinstance(baseline, dict) else None,
+    ]
+    for candidate in candidates:
+        label = str(candidate or "").strip()
+        if label and label.lower() in MATRIX_DIFFICULTY_BASE:
+            return label, MATRIX_DIFFICULTY_BASE[label.lower()]
+    return "Medium", MATRIX_DIFFICULTY_BASE["medium"]
+
+
+def _matrix_impact(item: dict, enriched: dict) -> float:
+    for source in (item, enriched):
+        raw = source.get("impact_score")
+        try:
+            score = float(raw)
+        except (TypeError, ValueError):
+            continue
+        if score > 0:
+            return score
+    for source in (item, enriched):
+        level = str(source.get("impact_level") or source.get("impact") or "").strip().lower()
+        if level in MATRIX_IMPACT_LEVEL:
+            return MATRIX_IMPACT_LEVEL[level]
+    return 0.0
+
+
+def _matrix_median(values: list[float]) -> float:
+    if not values:
+        return 0.0
+    ordered = sorted(values)
+    mid = len(ordered) // 2
+    if len(ordered) % 2:
+        return ordered[mid]
+    return (ordered[mid - 1] + ordered[mid]) / 2
+
+
+def _matrix_category(item: dict, enriched: dict | None) -> str:
+    """Best-effort business category for a challenge.
+
+    Live submissions carry `category`; the seeded feed rows only carry a
+    display string like "Billing • APAC — Finance", so fall back to the part
+    after the em dash before giving up.
+    """
+    for source in (enriched or {}, item):
+        value = str(source.get("category", "") or "").strip()
+        if value:
+            return value
+    display = str(item.get("metadata_display", "") or "")
+    if "—" in display:
+        tail = display.split("—")[-1].strip()
+        if tail:
+            return tail
+    return "General"
+
+
+def _matrix_department(item: dict) -> str:
+    submitter = item.get("submitter") or {}
+    if isinstance(submitter, dict):
+        dept = str(submitter.get("department", "") or "").strip()
+        if dept:
+            return dept
+    return "Unassigned"
+
+
+def build_opportunity_rows() -> list[dict]:
+    """Score every submitted pain point on complexity, proven result, and BU reach."""
+    submissions = load_meta_records("how_ai_help_submissions.json", CHALLENGE_FEED_ROWS)
+    solutions = load_meta_records("how_ai_help_solutions.json", PROPOSED_SOLUTION_ROWS)
+
+    # Keep only the furthest-along solution per challenge — that is the honest
+    # evidence that the pain point is on its way to being solved. Solutions are
+    # resolved by challenge_id where present, so a retyped title cannot silently
+    # cost a challenge its proof.
+    best_proof: dict[str, tuple[float, str]] = {}
+    for solution in solutions:
+        matched = resolve_challenge(solution, submissions)
+        key = str((matched or {}).get("id") or "").strip() or _matrix_key(solution.get("challenge"))
+        if not key:
+            continue
+        status = str(solution.get("status", "") or "").strip()
+        weight = MATRIX_PROOF_WEIGHT.get(status.lower(), MATRIX_PROOF_WEIGHT[""])
+        if key not in best_proof or weight > best_proof[key][0]:
+            best_proof[key] = (weight, status or "No solution yet")
+
+    # Reach is measured two ways and unioned: other business units that filed a
+    # pain point in the same category, and units whose pain point maps to the
+    # same existing agent (i.e. one build would serve them all).
+    by_category: dict[str, set[str]] = {}
+    by_agent: dict[str, set[str]] = {}
+    prepared: list[dict] = []
+    for item in submissions:
+        if not isinstance(item, dict):
+            continue
+        title = str(item.get("title", "") or "").strip()
+        if not title:
+            continue
+        enriched = find_sample_submission(title) or {}
+        category = _matrix_category(item, enriched)
+        department = _matrix_department(item)
+        agents = _matrix_reusable_agents(item, enriched)
+        by_category.setdefault(category, set()).add(department)
+        for agent in agents:
+            by_agent.setdefault(agent, set()).add(department)
+        prepared.append(
+            {
+                "item": item,
+                "enriched": enriched,
+                "title": title,
+                "category": category,
+                "department": department,
+                "agents": agents,
+            }
+        )
+
+    rows: list[dict] = []
+    for entry in prepared:
+        item, enriched = entry["item"], entry["enriched"]
+        difficulty, complexity = _matrix_difficulty(item, enriched)
+
+        # Quick-capture submissions already carry a measured complexity from
+        # the intake wizard (steps, volume, reuse). Prefer it over the
+        # difficulty-label estimate — it is derived from real answers.
+        stored_opportunity = item.get("opportunity")
+        if isinstance(stored_opportunity, dict) and stored_opportunity.get("complexity"):
+            complexity = max(1.0, min(10.0, float(stored_opportunity["complexity"]) / 10.0))
+
+        attachments = item.get("attachments") or enriched.get("attachments") or []
+        # Every extra input format is another integration to build and maintain.
+        complexity += 0.6 * max(0, len(attachments) - 1)
+        # An agent that already exists is most of the build already done.
+        if entry["agents"]:
+            complexity -= 1.5
+        complexity = max(1.0, min(10.0, complexity))
+
+        default_proof = (MATRIX_PROOF_WEIGHT[""], "No solution yet")
+        proof_weight, proof_label = best_proof.get(
+            str(item.get("id") or "").strip(),
+            best_proof.get(_matrix_key(entry["title"]), default_proof),
+        )
+        impact = _matrix_impact(item, enriched)
+        results = impact * proof_weight
+
+        reach = set(by_category.get(entry["category"], set()))
+        for agent in entry["agents"]:
+            reach |= by_agent.get(agent, set())
+        reach.add(entry["department"])
+        bu_count = max(1, len(reach))
+
+        # Reach multiplies value but with diminishing returns — the 6th BU is
+        # worth less than the 2nd.
+        value = results * (1 + 0.30 * (bu_count - 1))
+
+        rows.append(
+            {
+                "title": entry["title"],
+                "is_sample": is_sample_record(item),
+                "category": entry["category"],
+                "department": entry["department"],
+                "difficulty": difficulty,
+                "complexity": round(complexity, 1),
+                "impact": round(impact, 1),
+                "proof_label": proof_label,
+                "proof_weight": proof_weight,
+                "results": round(results, 1),
+                "bu_count": bu_count,
+                "bu_names": sorted(reach),
+                "value": round(value, 2),
+                "ratio": round(value / complexity, 3),
+                "agents": entry["agents"],
+                # Hours-per-year from the intake wizard, when the submission
+                # was captured with it. This is the figure that makes two
+                # unrelated pain points comparable.
+                "annual_hours": float((item.get("baseline") or {}).get("annual_hours") or 0.0),
+            }
+        )
+
+    if rows:
+        top_ratio = max(row["ratio"] for row in rows) or 1.0
+        for row in rows:
+            row["fruit_score"] = round(100 * row["ratio"] / top_ratio)
+    return rows
+
+
+def _matrix_svg(rows: list[dict], palette: dict, value_cut: float) -> str:
+    """Emphasis bubble chart: recommended picks in the accent, everything else gray.
+
+    x = build complexity, y = BU-weighted proven result, bubble area = BUs served.
+    """
+    width, height = 960, 500
+    left, right, top, bottom = 78, 928, 34, 404
+    value_max = max([row["value"] for row in rows] + [1.0]) * 1.15
+    x_cut = left + (MATRIX_COMPLEXITY_CUT / 10.0) * (right - left)
+    y_cut = bottom - (value_cut / value_max) * (bottom - top)
+
+    def px(complexity: float) -> float:
+        return left + (complexity / 10.0) * (right - left)
+
+    def py(value: float) -> float:
+        return bottom - (value / value_max) * (bottom - top)
+
+    parts: list[str] = []
+
+    # Recessive chrome: solid hairlines, one step off the surface.
+    for step in range(0, 11, 2):
+        gx = px(step)
+        parts.append(
+            f"<line x1='{gx:.1f}' y1='{top}' x2='{gx:.1f}' y2='{bottom}' "
+            f"stroke='{palette['grid']}' stroke-width='1'/>"
+        )
+        parts.append(
+            f"<text x='{gx:.1f}' y='{bottom + 22}' text-anchor='middle' font-size='13' "
+            f"fill='{palette['ink_secondary']}' style='font-variant-numeric:tabular-nums'>{step}</text>"
+        )
+    for frac in (0.25, 0.5, 0.75, 1.0):
+        gy = bottom - frac * (bottom - top)
+        parts.append(
+            f"<line x1='{left}' y1='{gy:.1f}' x2='{right}' y2='{gy:.1f}' "
+            f"stroke='{palette['grid']}' stroke-width='1'/>"
+        )
+        parts.append(
+            f"<text x='{left - 12}' y='{gy + 4:.1f}' text-anchor='end' font-size='13' "
+            f"fill='{palette['ink_secondary']}' style='font-variant-numeric:tabular-nums'>"
+            f"{frac * value_max:.0f}</text>"
+        )
+    parts.append(
+        f"<line x1='{left}' y1='{bottom}' x2='{right}' y2='{bottom}' "
+        f"stroke='{palette['axis']}' stroke-width='1'/>"
+    )
+    parts.append(
+        f"<line x1='{left}' y1='{top}' x2='{left}' y2='{bottom}' "
+        f"stroke='{palette['axis']}' stroke-width='1'/>"
+    )
+
+    # The two decision cuts, plus a wash over the recommended corner.
+    parts.append(
+        f"<rect x='{left}' y='{top}' width='{x_cut - left:.1f}' height='{y_cut - top:.1f}' "
+        f"fill='{palette['accent']}' opacity='0.10'/>"
+    )
+    parts.append(
+        f"<line x1='{x_cut:.1f}' y1='{top}' x2='{x_cut:.1f}' y2='{bottom}' "
+        f"stroke='{palette['axis']}' stroke-width='1'/>"
+    )
+    parts.append(
+        f"<line x1='{left}' y1='{y_cut:.1f}' x2='{right}' y2='{y_cut:.1f}' "
+        f"stroke='{palette['axis']}' stroke-width='1'/>"
+    )
+    quadrant_labels = [
+        (left + 12, top + 20, "start", "PICK FIRST — cheap, proven, wide reach"),
+        (right - 12, top + 20, "end", "BIG BETS — high value, heavy build"),
+        (left + 12, bottom - 12, "start", "FILLERS — cheap but narrow payoff"),
+        (right - 12, bottom - 12, "end", "PARK IT — costly, unproven"),
+    ]
+    for lx, ly, anchor, text in quadrant_labels:
+        parts.append(
+            f"<text x='{lx:.0f}' y='{ly:.0f}' text-anchor='{anchor}' font-size='12' "
+            f"letter-spacing='0.06em' fill='{palette['ink_secondary']}' opacity='0.75'>"
+            f"{html.escape(text)}</text>"
+        )
+
+    # Draw de-emphasised marks first so recommendations sit on top.
+    ordered = sorted(rows, key=lambda r: (r["is_fruit"], r["value"]))
+    for row in ordered:
+        cx, cy = px(row["complexity"]), py(row["value"])
+        radius = 6 + 3.2 * ((row["bu_count"] - 1) ** 0.5)
+        colour = palette["accent"] if row["is_fruit"] else palette["muted_mark"]
+        hours_line = (
+            f"{row['annual_hours']:,.0f} human hours/year at stake\n" if row.get("annual_hours") else ""
+        )
+        tooltip = (
+            f"{row['title']}\n"
+            f"{hours_line}"
+            f"Complexity {row['complexity']}/10 ({row['difficulty']})\n"
+            f"Result {row['results']}/10 — {row['proof_label']}\n"
+            f"{row['bu_count']} BU(s): {', '.join(row['bu_names'])}\n"
+            f"Value per effort {row['fruit_score']}/100"
+        )
+        # A 2px surface ring keeps overlapping bubbles readable; the transparent
+        # hit circle gives every mark a ~24px target regardless of its size.
+        parts.append(
+            f"<g class='om-bubble'><title>{html.escape(tooltip)}</title>"
+            f"<circle cx='{cx:.1f}' cy='{cy:.1f}' r='{radius:.1f}' fill='{colour}' "
+            f"fill-opacity='0.85' stroke='{palette['surface']}' stroke-width='2'/>"
+            f"<circle cx='{cx:.1f}' cy='{cy:.1f}' r='{max(12.0, radius):.1f}' fill='transparent'/>"
+            f"</g>"
+        )
+
+    # Direct-label only the top few recommendations, set beside their own bubble
+    # rather than stacked above the cluster. Recommendations tend to share an x,
+    # so a collided label is nudged vertically and reconnected with a leader line
+    # — a label floating free of its mark reads as noise.
+    placed: list[float] = []
+    for row in sorted([r for r in rows if r["is_fruit"]], key=lambda r: -r["fruit_score"])[:3]:
+        cx, cy = px(row["complexity"]), py(row["value"])
+        radius = 6 + 3.2 * ((row["bu_count"] - 1) ** 0.5)
+        label = row["title"] if len(row["title"]) <= 26 else row["title"][:25] + "…"
+        text_width = 7.2 * len(label)
+
+        flip = cx + radius + 10 + text_width > right
+        anchor = "end" if flip else "start"
+        lx = cx - radius - 10 if flip else cx + radius + 10
+
+        ly = cy + 4
+        while any(abs(ly - used) < 16 for used in placed):
+            ly += 16
+        placed.append(ly)
+
+        # Only draw the connector once the label has actually moved off its mark.
+        if abs(ly - (cy + 4)) > 6:
+            hook = cx - radius - 4 if flip else cx + radius + 4
+            parts.append(
+                f"<path d='M {cx:.1f} {cy:.1f} L {hook:.1f} {ly - 4:.1f} L "
+                f"{lx + (-4 if flip else 4):.1f} {ly - 4:.1f}' fill='none' "
+                f"stroke='{palette['axis']}' stroke-width='1'/>"
+            )
+        # A surface-coloured halo keeps the label readable where the cluster
+        # pushes it across an unrelated bubble.
+        parts.append(
+            f"<text x='{lx:.1f}' y='{ly:.1f}' text-anchor='{anchor}' font-size='13' "
+            f"font-weight='600' fill='{palette['ink']}' paint-order='stroke' "
+            f"stroke='{palette['surface']}' stroke-width='3' stroke-linejoin='round'>"
+            f"{html.escape(label)}</text>"
+        )
+
+    # Axis titles and legend. Two series, so a legend is mandatory.
+    parts.append(
+        f"<text x='{(left + right) / 2:.0f}' y='{bottom + 48}' text-anchor='middle' font-size='13' "
+        f"font-weight='600' fill='{palette['ink']}'>Build complexity  →  harder</text>"
+    )
+    parts.append(
+        f"<text transform='translate(24,{(top + bottom) / 2:.0f}) rotate(-90)' text-anchor='middle' "
+        f"font-size='13' font-weight='600' fill='{palette['ink']}'>Proven result × BU reach  →  higher</text>"
+    )
+    legend_y = height - 18
+    parts.append(
+        f"<circle cx='{left + 6}' cy='{legend_y - 4}' r='7' fill='{palette['accent']}' fill-opacity='0.85' "
+        f"stroke='{palette['surface']}' stroke-width='2'/>"
+        f"<text x='{left + 20}' y='{legend_y}' font-size='13' fill='{palette['ink_secondary']}'>"
+        f"Lowest hanging fruit</text>"
+    )
+    parts.append(
+        f"<circle cx='{left + 190}' cy='{legend_y - 4}' r='7' fill='{palette['muted_mark']}' fill-opacity='0.85' "
+        f"stroke='{palette['surface']}' stroke-width='2'/>"
+        f"<text x='{left + 204}' y='{legend_y}' font-size='13' fill='{palette['ink_secondary']}'>"
+        f"Everything else</text>"
+    )
+    parts.append(
+        f"<text x='{right}' y='{legend_y}' text-anchor='end' font-size='12' "
+        f"fill='{palette['ink_secondary']}' opacity='0.8'>Bubble size = business units served</text>"
+    )
+
+    body = "".join(parts)
+    return (
+        f"<svg viewBox='0 0 {width} {height}' width='100%' role='img' "
+        f"aria-label='Pain points plotted by build complexity against proven result weighted by business-unit reach' "
+        f"style='font-family:system-ui,-apple-system,\"Segoe UI\",sans-serif;display:block'>{body}</svg>"
+    )
+
+
+def _flatten_html(markup: str) -> str:
+    """Strip per-line indentation from an HTML block before st.markdown.
+
+    Streamlit runs the text through markdown before the HTML, and markdown
+    reads a line indented by four spaces as a code block — which is why this
+    matrix used to print its own tags on the page instead of drawing. Blank
+    lines go too: one of those ends the raw HTML block early and hands the
+    remainder back to the markdown parser.
+    """
+    lines = (line.strip() for line in str(markup).splitlines())
+    return "\n".join(line for line in lines if line)
+
+
+def render_opportunity_matrix() -> None:
+    rows = build_opportunity_rows()
+    is_dark = st.session_state.get("yes_theme", "dark") == "dark"
+    palette = MATRIX_THEME["dark" if is_dark else "light"]
+
+    if not rows:
+        st.markdown(
+            "<div class='opportunity-matrix'><div class='om-title'>🍏 Lowest Hanging Fruit Matrix</div>"
+            "<p class='om-sub'>No pain points submitted yet — the matrix fills in as challenges arrive.</p></div>",
+            unsafe_allow_html=True,
+        )
+        return
+
+    value_cut = _matrix_median([row["value"] for row in rows])
+    for row in rows:
+        row["is_fruit"] = row["complexity"] <= MATRIX_COMPLEXITY_CUT and row["value"] >= value_cut
+
+    fruit = sorted([r for r in rows if r["is_fruit"]], key=lambda r: -r["fruit_score"])
+    real_rows = [row for row in rows if not row["is_sample"]]
+    sample_count = len(rows) - len(real_rows)
+    all_bus = {row["department"] for row in real_rows}
+    shipped = [row for row in real_rows if row["proof_weight"] >= 0.90]
+
+    # Never let fixtures inflate a headline number without saying so.
+    tracked_note = (
+        f"<span class='om-kpi-sub'>{len(real_rows)} real · {sample_count} sample</span>"
+        if sample_count
+        else "<span class='om-kpi-sub'>all real submissions</span>"
+    )
+    sample_banner = (
+        "<p class='om-note' style='margin:0 0 1.1rem'><strong>Demo data is in view.</strong> "
+        f"{sample_count} of these {len(rows)} pain points are seeded examples, marked "
+        "<em>sample</em> in the table below. Business-unit and delivery counts above "
+        "cover real submissions only. Set <code>YESAICAN_DEMO_DATA=0</code> to hide fixtures entirely.</p>"
+        if sample_count
+        else ""
+    )
+
+    # An empty pick-first corner is a real signal, not a rendering fault — say so.
+    fruit_note = (
+        ""
+        if fruit
+        else (
+            "<p class='om-note' style='margin:0 0 1.1rem'><strong>Nothing in the pick-first corner yet.</strong> "
+            "Every open pain point is either above Medium difficulty or still unproven. The quickest way to "
+            "fill this corner is to split a big challenge into a small first slice, or to move an existing "
+            "draft solution to prototype.</p>"
+        )
+    )
+
     st.markdown(
-        """
-        <div class="nav-center-header" style="margin-bottom:1rem;">
-            <h2>🏠 HOW CAN AI HELP </h2>
+        _flatten_html(f"""
+        <style>
+        .opportunity-matrix {{
+            border-radius: 16px;
+            border: 1px solid var(--yz-rule);
+            background: {palette['surface']};
+            padding: 1.15rem 1.25rem;
+            margin: 0 0 1.5rem;
+            box-shadow: var(--yz-shadow);
+        }}
+        .opportunity-matrix .om-title {{
+            font-size: 1.05rem; font-weight: 700; color: {palette['ink']}; margin-bottom: 0.2rem;
+        }}
+        .opportunity-matrix .om-sub {{
+            font-size: 0.92rem; color: {palette['ink_secondary']}; margin: 0 0 1.1rem; max-width: 70ch;
+        }}
+        .opportunity-matrix .om-kpis {{
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.75rem; margin-bottom: 1.3rem;
+        }}
+        .opportunity-matrix .om-kpi {{
+            border: 1px solid {palette['grid']}; border-radius: 14px; padding: 0.8rem 0.95rem;
+        }}
+        .opportunity-matrix .om-kpi-label {{
+            font-size: 0.78rem; letter-spacing: 0.04em; color: {palette['ink_secondary']};
+            text-transform: uppercase; margin-bottom: 0.3rem;
+        }}
+        .opportunity-matrix .om-kpi-value {{
+            font-size: 2rem; font-weight: 650; line-height: 1; color: {palette['ink']};
+        }}
+        .opportunity-matrix .om-kpi-value.accent {{ color: {palette['accent']}; }}
+        .opportunity-matrix .om-kpi-sub {{
+            display: block; margin-top: 0.35rem; font-size: 0.74rem; color: {palette['ink_secondary']};
+        }}
+        .opportunity-matrix .om-sample-tag {{
+            font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase;
+            color: {palette['ink_secondary']}; border: 1px solid {palette['grid']};
+            border-radius: 3px; padding: 0.05em 0.35em; margin-left: 0.4rem; white-space: nowrap;
+        }}
+        .opportunity-matrix .om-plot {{ overflow-x: auto; }}
+        .opportunity-matrix .om-bubble {{ cursor: pointer; }}
+        .opportunity-matrix .om-bubble:hover circle:first-of-type {{ fill-opacity: 1; }}
+        .opportunity-matrix .om-note {{
+            font-size: 0.82rem; color: {palette['ink_secondary']}; margin: 0.9rem 0 0; max-width: 90ch;
+        }}
+        </style>
+        <div class="opportunity-matrix">
+            <div class="om-title">🍏 Lowest Hanging Fruit Matrix</div>
+            <p class="om-sub">
+                Every submitted pain point scored on three axes — how hard it is to build,
+                how far its solution actually got, and how many business units the same build
+                would serve. The highlighted corner is where to spend the next sprint.
+            </p>
+            <div class="om-kpis">
+                <div class="om-kpi">
+                    <div class="om-kpi-label">Pain points tracked</div>
+                    <div class="om-kpi-value">{len(rows)}</div>
+                    {tracked_note}
+                </div>
+                <div class="om-kpi">
+                    <div class="om-kpi-label">Lowest hanging fruit</div>
+                    <div class="om-kpi-value accent">{len(fruit)}</div>
+                </div>
+                <div class="om-kpi">
+                    <div class="om-kpi-label">Business units represented</div>
+                    <div class="om-kpi-value">{len(all_bus)}</div>
+                </div>
+                <div class="om-kpi">
+                    <div class="om-kpi-label">Reached MVP or better</div>
+                    <div class="om-kpi-value">{len(shipped)}</div>
+                </div>
+            </div>
+            {sample_banner}
+            {fruit_note}
+            <div class="om-plot">{_matrix_svg(rows, palette, value_cut)}</div>
+            <p class="om-note">
+                <strong>How to read it.</strong> Complexity starts from the submitter's declared
+                difficulty, rises with each extra input format, and drops when a reusable agent
+                already exists. Result is the impact score discounted by how far the best proposed
+                solution actually got — a Draft counts for far less than an MVP. Reach counts the
+                distinct business units that filed a pain point in the same category or that map to
+                the same existing agent. The vertical cut is Medium difficulty; the horizontal cut is
+                the median value across all submissions.
+            </p>
         </div>
-        """,
+        """),
         unsafe_allow_html=True,
     )
-    render_help_intro()
-    render_login_cta(auth_user)
 
-    render_quick_access(auth_user, origin="right")
+    # Table view twin — every plotted value is readable without the chart.
+    # Recommendations sort to the top and carry a 🍏 marker, so quadrant
+    # membership never depends on reading the accent colour.
+    table_rows = [
+        [
+            f"{'🍏 ' if row['is_fruit'] else ''}<strong>{html.escape(row['title'])}</strong>"
+            + ("<span class='om-sample-tag'>sample</span>" if row["is_sample"] else ""),
+            html.escape(row["category"]),
+            f"{row['annual_hours']:,.0f}" if row.get("annual_hours") else "<small>not sized</small>",
+            f"{row['complexity']:.1f} <small>({html.escape(row['difficulty'])})</small>",
+            f"{row['results']:.1f} <small>({html.escape(row['proof_label'])})</small>",
+            f"{row['bu_count']}",
+            f"{row['fruit_score']}",
+            build_action_button(
+                "AICANHELP",
+                build_page_url(
+                    "how_can_ai_help",
+                    {"challenge_title": row["title"], "solution_challenge": row["title"]},
+                ),
+            ),
+        ]
+        for row in sorted(rows, key=lambda r: (not r["is_fruit"], -r["fruit_score"]))
+    ]
+    render_neon_table(
+        "🍏 LOWEST HANGING FRUIT — ranked table view of the matrix above",
+        [
+            "📝 Pain point",
+            "🏷️ Category",
+            "⏱ Hours / year",
+            "🧗 Complexity /10",
+            "🎯 Result /10",
+            "🏢 BUs helped",
+            "⚡ Value / effort",
+            "🚀 Action",
+        ],
+        table_rows,
+        "No scored pain points yet.",
+        column_widths=["2.2fr", "1fr", "0.9fr", "1.1fr", "1.3fr", "0.8fr", "0.9fr", "0.9fr"],
+    )
 
-    # Digital Twin + Ontology sections pinned right after Quick Access
-    st.markdown("<div class='nav-center-wrapper'><div class='nav-command-grid'><div class='nav-mini-block'>", unsafe_allow_html=True)
-    if st.button("🧬 Digital Twin", key="nav_top_digital_twin", use_container_width=True):
-        go_to_page("pages/ontology_twin.py")
-    st.markdown("<div class='nav-mini-desc'>Explore the My Company Digital Twin ontology layer.</div>", unsafe_allow_html=True)
-    render_digital_twin_preview()
-    render_ontology_flowchart(height=560, title="#### 🗺️ Ontology Flow Chart — live view of the twin")
-    st.markdown("</div><div class='nav-mini-block'>", unsafe_allow_html=True)
-    if st.button("🧠 Ontology & Patterns", key="nav_top_ontology", use_container_width=True):
-        go_to_page("pages/ontology_patterns.py")
-    st.markdown("<div class='nav-mini-desc'>Reusable logic, prompts, and governance templates.</div>", unsafe_allow_html=True)
-    render_ontology_table()
-    st.markdown("</div></div></div>", unsafe_allow_html=True)
-    render_help_hub_layer(auth_user)
 
-    status_col, toggle_col = st.columns([3, 1])
-    with status_col:
-        if auth_user:
-            st.markdown(f"✅ Logged in as **{auth_user.get('name', auth_user.get('email'))}**")
-        else:
-            st.markdown("🔐 Not logged in — visit *Login / My Space* to personalize")
-    with toggle_col:
-        is_dark = st.session_state.get("yes_theme") == "dark"
-        theme_toggle = st.toggle("🌗 Dark Mode", value=is_dark, key="theme_toggle")
-        new_theme = "dark" if theme_toggle else "light"
-        if new_theme != st.session_state["yes_theme"]:
-            st.session_state["yes_theme"] = new_theme
-            set_theme(new_theme)
-            rerun_fn = getattr(st, "rerun", None) or getattr(st, "experimental_rerun", None)
-            if rerun_fn:
-                rerun_fn()
+# ============================================================
+# HOME PAGE BODY
+# ============================================================
+# The home page *is* the template: the three-step pain-point capture panel,
+# summary rail and AI preview, rendered from the same code as the Pain Points
+# page so the two can never drift apart.
+#
+# The legacy home — submit CTA, opportunity matrix, feature cards, navigation
+# centre — is kept behind this flag rather than deleted. Flip it to True to get
+# the old landing page back; nothing below it was removed.
+SHOW_LEGACY_HOME = False
 
-    render_navigation_center(AGENTS, feedback_data, auth_user)
+render_home_capture_panel()
 
-    st.markdown("</div>", unsafe_allow_html=True)
+if SHOW_LEGACY_HOME:
+    # The funnel's front door sits above everything else on the page.
+    render_submit_cta("hero", "Something repetitive, slow, frustrating or error-prone? One sentence is enough.")
+    render_opportunity_matrix()
 
-st.markdown("---")
 
-# Footer
-st.markdown("""
-    <footer>
-        💎 YES AI CAN — Rackers Lab & Community |  Made with ❤️ by Dzoan.nguyen@Rackspace.com
-    </footer>
-""", unsafe_allow_html=True)
+    # ============================================================
+    # MAIN LAYOUT: LEFT PANEL (Hero) + RIGHT PANEL (Navigation)
+    # ============================================================
+
+    # Global hero replaced by the neon sign rendered above.
+    # Two-column layout
+    c1, c2 = st.columns([1.1, 1.9], gap="large")
+
+    # LEFT PANEL — Hero Message
+    with c1:
+        st.markdown("<div class='left-box'>", unsafe_allow_html=True)
+
+        st.markdown("""
+            <div class="feature-card">
+                <div class="feature-title">🌌 What YES AI CAN Is</div>
+                <p class="feature-text">
+                    YES AI CAN is our Community’s AI Foundry + Community Agent Factory, built to:
+                </p>
+                <ul class="feature-list">
+                    <li>🧠 Mine our global superpowers — map every skill, SME, and domain expert</li>
+                    <li>🔍 Collect real business pain points — Kaggle-style challenge submissions</li>
+                    <li>🚀 Turn problems into agents — Customer ZERO → Customer ONE blueprints</li>
+                    <li>🪄 Give zero-code tools for creating explainable AI agents instantly</li>
+                    <li>🤝 Connect Ambassadors, SMEs, engineers, and innovators</li>
+                    <li>♻️ Accelerate reuse through a shared, governed agent library</li>
+                    <li>🏗️ Power the next generation of OpenStack + private AI solutions</li>
+                    <li>🌏 Unite Rackers globally into one open innovation community</li>
+                </ul>
+            </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("""
+            <div class="feature-card feature-card-blue">
+                <div class="feature-title feature-title-blue">💡 Why We Exist</div>
+                <p class="feature-text feature-text-white">
+                    Our Community has 5,000+ hidden superpowers — unique skills, ideas, and lived experiences waiting to be unlocked. YES AI CAN is the place where those superpowers become visible: in profiles, in projects, in prototypes, in agents, in solutions, and in community.
+                </p>
+                <p class="feature-text feature-text-white" style="margin-top: 1rem;">
+                    Our mission: Give every Racker — regardless of background — the confidence, tools, and platform to say: <strong style="color: var(--yz-indigo-dark);">“YES, AI CAN — and so can I.”</strong>
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("""
+            <div class="feature-card">
+                <div class="feature-title">🧩 Challenge & Solution Flow</div>
+                <p><strong>As User / Live Improver</strong></p>
+                <ul class="feature-list">
+                    <li>Submit any pain point or workflow (“How Can AI Help?”)</li>
+                    <li>Report improvement needs or new ideas to the community</li>
+                </ul>
+                <p><strong>As Solution Finder / Builder</strong></p>
+                <ul class="feature-list">
+                    <li>Help Rackers solve real-life problems</li>
+                    <li>Build AI tools that improve tasks, workflows, and happiness</li>
+                </ul>
+                <p><strong>Next action</strong></p>
+                <p>Create your Human Stack Profile (skills, experience, resume, expertise)</p>
+            </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("""
+            <div class="feature-card">
+                <div class="feature-title">🧱 What You Can Do Here</div>
+                <h4>💬 As a User — Live Improver</h4>
+                <p><strong>Submit a Pain Point or Workflow — “How Can AI Help?”</strong><br>
+                Share any challenge, repetitive task, manual workflow, or inefficiency in your daily work.<br>
+                Your submission becomes a real challenge for the community to solve — together.</p>
+                <p><strong>Report Any Pain Point, Improvement Need, or Idea</strong><br>
+                Tell the community what slows you down, what’s broken, or what could be better.<br>
+                Every idea becomes fuel for the next internal AI tool, automation, or workflow upgrade.</p>
+                <h4>🛠️ As a Solution Finder or Builder — Solve Real Rackers’ Problems</h4>
+                <p>Step in to help your teammates by designing or proposing AI-powered solutions.<br>
+                Use zero-code tools or your technical skills to:</p>
+                <ul class="feature-list">
+                    <li>Automate repetitive tasks</li>
+                    <li>Streamline complex workflows</li>
+                    <li>Improve accuracy and efficiency</li>
+                    <li>Reduce frustration</li>
+                    <li>Make someone’s day easier — and happier</li>
+                </ul>
+                <p>Every problem submitted is an opportunity for you to build something impactful.</p>
+                <h4>👉 Next Action: Create Your Human Stack Profile</h4>
+                <p><strong>👤 Create your Human Stack Profile</strong> — Showcase your skills, domain expertise, role & department, resume, AI experience, and the projects you’ve built or contributed to.<br>
+                Your profile helps others find you, collaborate with you, and invite you to solve challenges that match your strengths.</p>
+            </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("""
+            <div class="feature-card feature-card-blue">
+                <div class="feature-title feature-title-blue">🚀 Built for You</div>
+                <p class="feature-text feature-text-white">
+                    Whether you're an engineer, analyst, salesperson, manager, operator, or creator — YES AI CAN is your footstool into AI, designed for zero fear, zero barriers, zero cost, maximum clarity, maximum support, maximum impact.
+                </p>
+                <p class="feature-text feature-text-white" style="margin-top: 1rem;">
+                    This is how our Community builds a future where AI is safe, transparent, explainable, human-centered, and globally collaborative.
+                </p>
+                <p class="feature-text feature-text-white" style="margin-top: 1rem; text-align: center; font-weight: 650; color: var(--yz-indigo-dark);">
+                    🫂 Welcome to the Future of Human-Centered AI at our Community<br>
+                    Here, ideas turn into prototypes. Prototypes turn into agents. Agents turn into products. And Rackers turn into creators.
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+        render_primary_navigation_buttons()
+        # Duplicate call with similar content exists elsewhere; keeping left panel lighter by
+        # skipping the extra “Jump into Forms & Workspaces” block for now.
+        # render_form_navigation_buttons()
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # RIGHT PANEL — Navigation and Home Page Layers
+    with c2:
+        st.markdown("<div class='right-box'>", unsafe_allow_html=True)
+        st.markdown(
+            """
+            <div class="nav-center-header" style="margin-bottom:1rem;">
+                <h2>🏠 HOW CAN AI HELP </h2>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        render_help_intro()
+        render_login_cta(auth_user)
+
+        render_quick_access(auth_user, origin="right")
+
+        # Digital Twin + Ontology sections pinned right after Quick Access
+        st.markdown("<div class='nav-center-wrapper'><div class='nav-command-grid'><div class='nav-mini-block'>", unsafe_allow_html=True)
+        if st.button("🧬 Digital Twin", key="nav_top_digital_twin", use_container_width=True):
+            go_to_page("pages/ontology_twin.py")
+        st.markdown("<div class='nav-mini-desc'>Explore the My Company Digital Twin ontology layer.</div>", unsafe_allow_html=True)
+        render_digital_twin_preview()
+        render_ontology_flowchart(height=560, title="#### 🗺️ Ontology Flow Chart — live view of the twin")
+        st.markdown("</div><div class='nav-mini-block'>", unsafe_allow_html=True)
+        if st.button("🧠 Ontology & Patterns", key="nav_top_ontology", use_container_width=True):
+            go_to_page("pages/ontology_patterns.py")
+        st.markdown("<div class='nav-mini-desc'>Reusable logic, prompts, and governance templates.</div>", unsafe_allow_html=True)
+        render_ontology_table()
+        st.markdown("</div></div></div>", unsafe_allow_html=True)
+        render_help_hub_layer(auth_user)
+
+        status_col, toggle_col = st.columns([3, 1])
+        with status_col:
+            if auth_user:
+                st.markdown(f"✅ Logged in as **{auth_user.get('name', auth_user.get('email'))}**")
+            else:
+                st.markdown("🔐 Not logged in — visit *Login / My Space* to personalize")
+        with toggle_col:
+            is_dark = st.session_state.get("yes_theme") == "dark"
+            theme_toggle = st.toggle("🌗 Dark Mode", value=is_dark, key="theme_toggle")
+            new_theme = "dark" if theme_toggle else "light"
+            if new_theme != st.session_state["yes_theme"]:
+                st.session_state["yes_theme"] = new_theme
+                set_theme(new_theme)
+                rerun_fn = getattr(st, "rerun", None) or getattr(st, "experimental_rerun", None)
+                if rerun_fn:
+                    rerun_fn()
+
+        render_navigation_center(AGENTS, feedback_data, auth_user)
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # Footer
+    st.markdown("""
+        <footer>
+            💎 YES AI CAN — Rackers Lab & Community |  Made with ❤️ by Dzoan.nguyen@Rackspace.com
+        </footer>
+    """, unsafe_allow_html=True)

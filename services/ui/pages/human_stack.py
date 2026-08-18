@@ -10,6 +10,8 @@ from pathlib import Path
 from typing import Dict, List, Any
 
 from services.ui.utils.meta_store import load_json, save_json, META_DIR
+from services.ui.utils import embed_flags
+from services.ui.utils.page_template import page_chrome
 
 st.set_page_config(
     page_title="Human Stack Directory — YES AI CAN",
@@ -358,28 +360,14 @@ def format_review_timestamp(value: str | None) -> str:
         return str(value)
 
 
-# Page header
-st.title("👤 Human Stack Directory")
-st.markdown("**YES AI CAN — Rackers Lab & Community**")
-st.markdown("---")
-st.markdown(STAR_CSS, unsafe_allow_html=True)
 
-# Tabs: List View, Create/Edit Profile, Search
-tab1, tab2, tab3 = st.tabs(["📋 Directory", "➕ Create/Edit Profile", "🔍 Search & Filter"])
+# This page's own chrome. Community imports the three render functions below
+# and calls them inside its own tabs, so none of this may run on import.
+if not embed_flags.PROFILES_EMBEDDED:
+    page_chrome('human_stack', 'People & Skills',
+                'Who knows what — skills, SMEs and portfolios.')
+    st.markdown(STAR_CSS, unsafe_allow_html=True)
 
-humans = load_humans()
-profile_feedback = load_profile_feedback()
-
-# --- FIX: New Query Params Logic ---
-# Check if a specific profile is requested via URL (e.g. ?profile_id=123)
-# We use .get() which returns None if the key doesn't exist
-url_profile_id = st.query_params.get("profile_id")
-
-if url_profile_id:
-    # Set the view only if it's not already set, or if we want the URL to drive navigation
-    if "view_profile" not in st.session_state:
-        st.session_state["view_profile"] = url_profile_id
-# -----------------------------------
 
 # humans = load_humans()
 # query_params = st.experimental_get_query_params()
@@ -478,7 +466,16 @@ if url_profile_id:
 # ─────────────────────────────
 # TAB 1 — Card Directory
 # ─────────────────────────────
-with tab1:
+def render_directory():
+    # Loaded per call: this renders inside Community too, and a module-level
+    # read would go stale after the first run of that page.
+    humans = load_humans()
+    profile_feedback = load_profile_feedback()
+
+    url_profile_id = st.query_params.get('profile_id')
+    if url_profile_id and 'view_profile' not in st.session_state:
+        st.session_state['view_profile'] = url_profile_id
+
     st.subheader("All Rackers in AI Innovation")
 
     view_id = st.session_state.get("view_profile")
@@ -771,7 +768,12 @@ with tab1:
 # ─────────────────────────────
 # TAB 2 — Create / Edit Profile
 # ─────────────────────────────
-with tab2:
+def render_profile_form():
+    # Loaded per call: this renders inside Community too, and a module-level
+    # read would go stale after the first run of that page.
+    humans = load_humans()
+    profile_feedback = load_profile_feedback()
+
     st.subheader("Create or Edit Your Profile")
 
     # Check if editing
@@ -907,7 +909,12 @@ with tab2:
 # ─────────────────────────────
 # TAB 3 — Search & Filter (with product needs)
 # ─────────────────────────────
-with tab3:
+def render_search():
+    # Loaded per call: this renders inside Community too, and a module-level
+    # read would go stale after the first run of that page.
+    humans = load_humans()
+    profile_feedback = load_profile_feedback()
+
     st.subheader("Search & Filter Rackers")
 
     # Build search options from humans + AI service catalog
@@ -1050,3 +1057,14 @@ with tab3:
             if st.button("Edit Profile", key=f"t3_edit_{human.get('id')}"):
                 st.session_state["edit_profile"] = human.get("id")
                 st.rerun()
+
+
+if not embed_flags.PROFILES_EMBEDDED:
+    _t1, _t2, _t3 = st.tabs(
+        ['📋 Directory', '➕ Create/Edit Profile', '🔍 Search & Filter'])
+    with _t1:
+        render_directory()
+    with _t2:
+        render_profile_form()
+    with _t3:
+        render_search()

@@ -1,0 +1,84 @@
+# Authenticating reverse proxy for the YES AI CAN Lab UI.
+#
+# WHY THIS FILE EXISTS
+# Streamlit publishes every file under services/ui/pages/ as its own URL. Only a
+# few of this app's 62 pages share a common entry point, so an in-app gate can
+# always be bypassed by requesting a page directly. Authentication has to happen
+# before the request reaches Streamlit. That is what this config does.
+#
+# USAGE
+#   1. Bind Streamlit to localhost only so it cannot be reached directly:
+#        UIHOST=127.0.0.1 ./newstart.sh
+#      (or --server.address 127.0.0.1)
+#   2. Put this proxy in front of it on the public port.
+#   3. Run the app in proxy mode so it learns who was let in:
+#        export YESAICAN_AUTH_MODE=proxy
+#        export YESAICAN_AUTH_HEADER=X-Forwarded-User
+#
+# Pick ONE of the two auth blocks below.
+
+upstream yesaican_ui {
+    server 127.0.0.1:8054;
+}
+
+server {
+    listen 443 ssl;
+    server_name yesaican.internal.example.com;
+
+    ssl_certificate     /etc/ssl/certs/yesaican.crt;
+    ssl_certificate_key /etc/ssl/private/yesaican.key;
+
+    # ---------------------------------------------------------------
+    # OPTION A — SSO via oauth2-proxy (preferred; gives real identities)
+    # Run oauth2-proxy against your IdP on 127.0.0.1:4180, then:
+    # ---------------------------------------------------------------
+    # location /oauth2/ {
+    #     proxy_pass       http://127.0.0.1:4180;
+    #     proxy_set_header Host             $host;
+    #     proxy_set_header X-Real-IP        $remote_addr;
+    #     proxy_set_header X-Forwarded-Proto $scheme;
+    # }
+    # location = /oauth2/auth {
+    #     proxy_pass       http://127.0.0.1:4180;
+    #     proxy_set_header Content-Length "";
+    #     proxy_pass_request_body off;
+    # }
+
+    # ---------------------------------------------------------------
+    # OPTION B — HTTP basic auth (stopgap; identifies a team, not a person)
+    # Create the file with:  htpasswd -c /etc/nginx/.htpasswd yesaican
+    # ---------------------------------------------------------------
+    auth_basic           "YES AI CAN Lab";
+    auth_basic_user_file /etc/nginx/.htpasswd;
+
+    location / {
+        # OPTION A only — uncomment these two lines and remove the auth_basic
+        # pair above to switch from basic auth to SSO:
+        # auth_request     /oauth2/auth;
+        # error_page 401 = /oauth2/sign_in;
+        # auth_request_set $user $upstream_http_x_auth_request_email;
+
+        # Identity handed to the app. With basic auth this is $remote_user;
+        # with oauth2-proxy use $user from the auth_request_set above.
+        proxy_set_header X-Forwarded-User $remote_user;
+
+        proxy_pass http://yesaican_ui;
+
+        proxy_http_version 1.1;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Streamlit talks over a websocket; without these the app never loads.
+        proxy_set_header Upgrade    $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 86400;
+    }
+}
+
+server {
+    listen 80;
+    server_name yesaican.internal.example.com;
+    return 301 https://$host$request_uri;
+}

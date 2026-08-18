@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Any
+from services.ui.utils.page_template import page_chrome
 
 st.set_page_config(
     page_title="Ontology & Patterns — YES AI CAN",
@@ -50,7 +51,7 @@ def save_ontology(ontology: List[Dict]):
         json.dump(ontology, f, ensure_ascii=False, indent=2)
 
 # Page header
-st.title("🧠 Ontology & Pattern Library")
+page_chrome("", "Ontology & Patterns", "Reusable logic, prompts and governance templates.")
 st.markdown("**YES AI CAN — Rackers Lab & Community**")
 st.markdown("---")
 

@@ -1,0 +1,146 @@
+[
+  {
+    "id": "sample_project_1",
+    "is_sample": true,
+    "title": "Quote-to-Cash Copilot",
+    "summary": "One agent spanning order form, contract and invoice, so a signed deal becomes a reconciled payment without three teams re-keying the same numbers into three systems.",
+    "description": "One agent spanning order form, contract and invoice, so a signed deal becomes a reconciled payment without three teams re-keying the same numbers into three systems.",
+    "authors": [
+      "Noor Haddad"
+    ],
+    "lead_engineer": "Noor Haddad",
+    "phase": "MVP",
+    "status": "MVP",
+    "business_units": [
+      "Sales",
+      "Legal",
+      "Billing",
+      "Finance"
+    ],
+    "expertise_needed": [
+      "Sales - which pricing exceptions are real, and how they get approved",
+      "Legal - which clause types may be auto-filled and which never may",
+      "Billing - the invoice schema and every customer-specific edge case",
+      "Finance - what actually counts as a reconciled payment"
+    ],
+    "closes_painpoints": [
+      "sample_challenge_3",
+      "sample_challenge_4",
+      "sample_challenge_1",
+      "sample_challenge_2"
+    ],
+    "closes_titles": [
+      "Order forms and contracts get retyped into the CRM",
+      "Which clause version is current lives in an email thread",
+      "Every customer wants their invoice in a different layout",
+      "Payments that do not match the invoice get chased by hand"
+    ],
+    "blocked_on": "Legal sign-off on which clause types can be auto-populated",
+    "ask": "Two hours from someone in Legal to classify the clause library.",
+    "tags": [
+      "cross-BU",
+      "AI engineering",
+      "Sales",
+      "Legal",
+      "Billing",
+      "Finance"
+    ],
+    "stars": 6,
+    "upvotes": 6,
+    "created_at": "2026-08-07T07:38:18.661821+00:00"
+  },
+  {
+    "id": "sample_project_2",
+    "is_sample": true,
+    "title": "Account Health Signal Mesh",
+    "summary": "Joins provisioning telemetry, ticket history and adoption data onto one account id, so every team reads the same health signal instead of assembling its own.",
+    "description": "Joins provisioning telemetry, ticket history and adoption data onto one account id, so every team reads the same health signal instead of assembling its own.",
+    "authors": [
+      "Ravi Patel"
+    ],
+    "lead_engineer": "Ravi Patel",
+    "phase": "Prototype",
+    "status": "Prototype",
+    "business_units": [
+      "Service Delivery",
+      "Customer Success",
+      "Support",
+      "Product"
+    ],
+    "expertise_needed": [
+      "Service Delivery - what a healthy provisioning run actually looks like",
+      "Customer Success - the signals that really precede a churn conversation",
+      "Support - how ticket sentiment maps to account risk",
+      "Product - which usage metrics predict renewal rather than just activity"
+    ],
+    "closes_painpoints": [
+      "sample_challenge_7",
+      "sample_challenge_8",
+      "sample_challenge_10"
+    ],
+    "closes_titles": [
+      "The account review deck is rebuilt from five dashboards",
+      "Delivery status is a query across four trackers",
+      "The same twenty tickets get triaged from scratch every week"
+    ],
+    "blocked_on": "No single account identifier exists across the four systems",
+    "ask": "One person from each unit to agree the joining key. One meeting, four people.",
+    "tags": [
+      "cross-BU",
+      "AI engineering",
+      "Service Delivery",
+      "Customer Success",
+      "Support",
+      "Product"
+    ],
+    "stars": 4,
+    "upvotes": 4,
+    "created_at": "2026-07-27T07:38:18.661821+00:00"
+  },
+  {
+    "id": "sample_project_3",
+    "is_sample": true,
+    "title": "Evidence-on-Demand for Audits",
+    "summary": "Continuous control-evidence collection across every unit, so an audit is answered with a query instead of a six-week chase.",
+    "description": "Continuous control-evidence collection across every unit, so an audit is answered with a query instead of a six-week chase.",
+    "authors": [
+      "Grace Okoro"
+    ],
+    "lead_engineer": "Grace Okoro",
+    "phase": "Incubation",
+    "status": "Incubation",
+    "business_units": [
+      "Security, Risk & Compliance",
+      "Service Delivery",
+      "Marketing",
+      "Billing"
+    ],
+    "expertise_needed": [
+      "Security - which controls need evidence, and the form an auditor accepts",
+      "Service Delivery - where the deployment and provisioning records live",
+      "Marketing - the approval trail behind published claims",
+      "Billing - evidence for the financial controls specifically"
+    ],
+    "closes_painpoints": [
+      "sample_challenge_6",
+      "sample_challenge_5"
+    ],
+    "closes_titles": [
+      "Control exceptions need sign-off before every audit",
+      "Campaign creative waits on three separate sign-offs"
+    ],
+    "blocked_on": "Retention policy for evidence containing customer identifiers",
+    "ask": "A decision from Security on retention before any collector is written.",
+    "tags": [
+      "cross-BU",
+      "AI engineering",
+      "Security, Risk & Compliance",
+      "Service Delivery",
+      "Marketing",
+      "Billing"
+    ],
+    "stars": 3,
+    "upvotes": 3,
+    "created_at": "2026-07-16T07:38:18.661821+00:00"
+  }
+]

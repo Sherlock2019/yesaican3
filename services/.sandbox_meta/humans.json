@@ -1,5 +1,353 @@
 [
   {
+    "id": "sample_human_mateo_duarte",
+    "is_sample": true,
+    "name": "Mateo Duarte",
+    "department": "Billing",
+    "region": "Americas",
+    "role": "AI Ambassador",
+    "skills": [
+      "Schema mapping",
+      "SQL",
+      "Billing systems"
+    ],
+    "projects_built": [
+      "Explain every reconciliation break in one line"
+    ],
+    "ai_services": [
+      "Explain every reconciliation break in one line"
+    ],
+    "bio": "Billing. Currently helping Finance with \"payments that do not match the invoice get chased by hand\".",
+    "ambassador": true,
+    "created_at": "2026-08-18T07:38:18.661821+00:00",
+    "updated_at": "2026-08-18T07:38:18.661821+00:00"
+  },
+  {
+    "id": "sample_human_marta_lindqvist",
+    "is_sample": true,
+    "name": "Marta Lindqvist",
+    "department": "Finance",
+    "region": "EMEA",
+    "role": "AI Ambassador",
+    "skills": [
+      "Reconciliation",
+      "Controls",
+      "Excel"
+    ],
+    "projects_built": [
+      "Convert the billing export into each customer's layout automatically"
+    ],
+    "ai_services": [
+      "Convert the billing export into each customer's layout automatically"
+    ],
+    "bio": "Finance. Currently helping Billing with \"every customer wants their invoice in a different layout\".",
+    "ambassador": true,
+    "created_at": "2026-08-18T07:38:18.661821+00:00",
+    "updated_at": "2026-08-18T07:38:18.661821+00:00"
+  },
+  {
+    "id": "sample_human_aisha_kone",
+    "is_sample": true,
+    "name": "Aisha Kone",
+    "department": "Legal",
+    "region": "EMEA",
+    "role": "AI Ambassador",
+    "skills": [
+      "Document AI",
+      "Contract law",
+      "Redlining"
+    ],
+    "projects_built": [
+      "Extract the order-form fields straight into the CRM"
+    ],
+    "ai_services": [
+      "Extract the order-form fields straight into the CRM"
+    ],
+    "bio": "Legal. Currently helping Sales with \"order forms and contracts get retyped into the crm\".",
+    "ambassador": true,
+    "created_at": "2026-08-18T07:38:18.661821+00:00",
+    "updated_at": "2026-08-18T07:38:18.661821+00:00"
+  },
+  {
+    "id": "sample_human_chidi_nwosu",
+    "is_sample": true,
+    "name": "Chidi Nwosu",
+    "department": "Sales",
+    "region": "Americas",
+    "role": "AI Ambassador",
+    "skills": [
+      "CPQ",
+      "Deal desk",
+      "Process design"
+    ],
+    "projects_built": [
+      "Track redline versions against the clause instead of the thread"
+    ],
+    "ai_services": [
+      "Track redline versions against the clause instead of the thread"
+    ],
+    "bio": "Sales. Currently helping Legal with \"which clause version is current lives in an email thread\".",
+    "ambassador": true,
+    "created_at": "2026-08-18T07:38:18.661821+00:00",
+    "updated_at": "2026-08-18T07:38:18.661821+00:00"
+  },
+  {
+    "id": "sample_human_diego_santos",
+    "is_sample": true,
+    "name": "Diego Santos",
+    "department": "Support",
+    "region": "Americas",
+    "role": "AI Ambassador",
+    "skills": [
+      "Retrieval",
+      "NLP",
+      "Knowledge bases"
+    ],
+    "projects_built": [
+      "Assemble the account review pack automatically"
+    ],
+    "ai_services": [
+      "Assemble the account review pack automatically"
+    ],
+    "bio": "Support. Currently helping Customer Success with \"the account review deck is rebuilt from five dashboards\".",
+    "ambassador": true,
+    "created_at": "2026-08-18T07:38:18.661821+00:00",
+    "updated_at": "2026-08-18T07:38:18.661821+00:00"
+  },
+  {
+    "id": "sample_human_lena_fischer",
+    "is_sample": true,
+    "name": "Lena Fischer",
+    "department": "Customer Success",
+    "region": "EMEA",
+    "role": "AI Ambassador",
+    "skills": [
+      "Adoption analytics",
+      "Reporting",
+      "Escalations"
+    ],
+    "projects_built": [
+      "Match an incoming ticket to a known resolution before triage"
+    ],
+    "ai_services": [
+      "Match an incoming ticket to a known resolution before triage"
+    ],
+    "bio": "Customer Success. Currently helping Support with \"the same twenty tickets get triaged from scratch every week\".",
+    "ambassador": true,
+    "created_at": "2026-08-18T07:38:18.661821+00:00",
+    "updated_at": "2026-08-18T07:38:18.661821+00:00"
+  },
+  {
+    "id": "sample_human_kofi_mensah",
+    "is_sample": true,
+    "name": "Kofi Mensah",
+    "department": "Service Delivery",
+    "region": "Americas",
+    "role": "AI Ambassador",
+    "skills": [
+      "Automation",
+      "Terraform",
+      "Evidence collection"
+    ],
+    "projects_built": [
+      "Collect control evidence on a schedule instead of at audit time"
+    ],
+    "ai_services": [
+      "Collect control evidence on a schedule instead of at audit time"
+    ],
+    "bio": "Service Delivery. Currently helping Security, Risk & Compliance with \"control exceptions need sign-off before every audit\".",
+    "ambassador": true,
+    "created_at": "2026-08-18T07:38:18.661821+00:00",
+    "updated_at": "2026-08-18T07:38:18.661821+00:00"
+  },
+  {
+    "id": "sample_human_yusuf_demir",
+    "is_sample": true,
+    "name": "Yusuf Demir",
+    "department": "Security, Risk & Compliance",
+    "region": "EMEA",
+    "role": "AI Ambassador",
+    "skills": [
+      "GRC",
+      "Approval workflow",
+      "Audit"
+    ],
+    "projects_built": [
+      "Make the three sign-offs one visible gate"
+    ],
+    "ai_services": [
+      "Make the three sign-offs one visible gate"
+    ],
+    "bio": "Security, Risk & Compliance. Currently helping Marketing with \"campaign creative waits on three separate sign-offs\".",
+    "ambassador": true,
+    "created_at": "2026-08-18T07:38:18.661821+00:00",
+    "updated_at": "2026-08-18T07:38:18.661821+00:00"
+  },
+  {
+    "id": "sample_human_sofia_rossi",
+    "is_sample": true,
+    "name": "Sofia Rossi",
+    "department": "Product",
+    "region": "EMEA",
+    "role": "AI Ambassador",
+    "skills": [
+      "Clustering",
+      "Product analytics",
+      "Roadmapping"
+    ],
+    "projects_built": [
+      "One delivery status view across the four trackers"
+    ],
+    "ai_services": [
+      "One delivery status view across the four trackers"
+    ],
+    "bio": "Product. Currently helping Service Delivery with \"delivery status is a query across four trackers\".",
+    "ambassador": true,
+    "created_at": "2026-08-18T07:38:18.661821+00:00",
+    "updated_at": "2026-08-18T07:38:18.661821+00:00"
+  },
+  {
+    "id": "sample_human_priya_raman",
+    "is_sample": true,
+    "name": "Priya Raman",
+    "department": "Marketing",
+    "region": "APAC",
+    "role": "AI Ambassador",
+    "skills": [
+      "Segmentation",
+      "Embeddings",
+      "Python"
+    ],
+    "projects_built": [
+      "Cluster feedback into themes continuously instead of quarterly"
+    ],
+    "ai_services": [
+      "Cluster feedback into themes continuously instead of quarterly"
+    ],
+    "bio": "Marketing. Currently helping Product with \"roadmap themes are tallied by hand once a quarter\".",
+    "ambassador": true,
+    "created_at": "2026-08-18T07:38:18.661821+00:00",
+    "updated_at": "2026-08-18T07:38:18.661821+00:00"
+  },
+  {
+    "id": "sample_human_tobias_krause",
+    "is_sample": true,
+    "name": "Tobias Krause",
+    "department": "Operations / Cloud Services",
+    "region": "EMEA",
+    "role": "AI Ambassador",
+    "skills": [
+      "CMDB",
+      "Automation",
+      "Data quality"
+    ],
+    "projects_built": [
+      "Extract spec-sheet fields straight into the product catalogue"
+    ],
+    "ai_services": [
+      "Extract spec-sheet fields straight into the product catalogue"
+    ],
+    "bio": "Operations / Cloud Services. Currently helping Product & Solutions with \"partner spec sheets are retyped into the product catalogue\".",
+    "ambassador": true,
+    "created_at": "2026-08-18T07:38:18.661821+00:00",
+    "updated_at": "2026-08-18T07:38:18.661821+00:00"
+  },
+  {
+    "id": "sample_human_hana_sato",
+    "is_sample": true,
+    "name": "Hana Sato",
+    "department": "Product & Solutions",
+    "region": "APAC",
+    "role": "AI Ambassador",
+    "skills": [
+      "Product analytics",
+      "Taxonomy",
+      "Retrieval"
+    ],
+    "projects_built": [
+      "Name the twenty repeat issues explicitly and match against that list"
+    ],
+    "ai_services": [
+      "Name the twenty repeat issues explicitly and match against that list"
+    ],
+    "bio": "Product & Solutions. Currently helping Support with \"the same twenty tickets get triaged from scratch every week\".",
+    "ambassador": true,
+    "created_at": "2026-08-18T07:38:18.661821+00:00",
+    "updated_at": "2026-08-18T07:38:18.661821+00:00"
+  },
+  {
+    "id": "sample_human_noor_haddad",
+    "is_sample": true,
+    "name": "Noor Haddad",
+    "department": "Engineering & Delivery",
+    "region": "Global",
+    "role": "AI Engineer",
+    "skills": [
+      "Agent design",
+      "Retrieval",
+      "Evaluation",
+      "Python"
+    ],
+    "projects_built": [
+      "Quote-to-Cash Copilot"
+    ],
+    "ai_services": [
+      "Quote-to-Cash Copilot"
+    ],
+    "bio": "Leading Quote-to-Cash Copilot, which closes 4 painpoints across 4 units. Needs expertise from Sales, Legal, Billing, Finance. Blocked on: Legal sign-off on which clause types can be auto-populated",
+    "ambassador": false,
+    "created_at": "2026-08-18T07:38:18.661821+00:00",
+    "updated_at": "2026-08-18T07:38:18.661821+00:00"
+  },
+  {
+    "id": "sample_human_ravi_patel",
+    "is_sample": true,
+    "name": "Ravi Patel",
+    "department": "Engineering & Delivery",
+    "region": "Global",
+    "role": "AI Engineer",
+    "skills": [
+      "Agent design",
+      "Retrieval",
+      "Evaluation",
+      "Python"
+    ],
+    "projects_built": [
+      "Account Health Signal Mesh"
+    ],
+    "ai_services": [
+      "Account Health Signal Mesh"
+    ],
+    "bio": "Leading Account Health Signal Mesh, which closes 3 painpoints across 4 units. Needs expertise from Service Delivery, Customer Success, Support, Product. Blocked on: No single account identifier exists across the four systems",
+    "ambassador": false,
+    "created_at": "2026-08-18T07:38:18.661821+00:00",
+    "updated_at": "2026-08-18T07:38:18.661821+00:00"
+  },
+  {
+    "id": "sample_human_grace_okoro",
+    "is_sample": true,
+    "name": "Grace Okoro",
+    "department": "Engineering & Delivery",
+    "region": "Global",
+    "role": "AI Engineer",
+    "skills": [
+      "Agent design",
+      "Retrieval",
+      "Evaluation",
+      "Python"
+    ],
+    "projects_built": [
+      "Evidence-on-Demand for Audits"
+    ],
+    "ai_services": [
+      "Evidence-on-Demand for Audits"
+    ],
+    "bio": "Leading Evidence-on-Demand for Audits, which closes 2 painpoints across 4 units. Needs expertise from Security, Risk & Compliance, Service Delivery, Marketing, Billing. Blocked on: Retention policy for evidence containing customer identifiers",
+    "ambassador": false,
+    "created_at": "2026-08-18T07:38:18.661821+00:00",
+    "updated_at": "2026-08-18T07:38:18.661821+00:00"
+  },
+  {
     "id": "human_dzoan_2",
     "name": "dzoan nguyen tran",
     "department": "cloud architect",
@@ -176,5 +524,25 @@
     "sme_level": "⭐⭐⭐⭐ Expert",
     "created_at": "2024-05-20",
     "updated_at": "2025-01-02"
+  },
+  {
+    "id": "human_20260818110137_9",
+    "name": "racker",
+    "email": "racker@rackspace.com",
+    "department": "ops",
+    "team": "",
+    "role": "architect",
+    "region": "APAC",
+    "skills": [],
+    "domain_expertise": "",
+    "bio": "",
+    "linkedin": "",
+    "github": "",
+    "portfolio": "",
+    "ambassador": false,
+    "projects_authored": [],
+    "created_at": "2026-08-18T11:01:37.853782",
+    "updated_at": "2026-08-18T11:01:37.853787",
+    "password_hash": "3977b541de395e98047200361ce54c4b0682a76df2163ec150bc7ae5e8d6b56e"
   }
 ]

@@ -2,53 +2,144 @@
 # Showcase Ambassador cohorts and community engagement
 
 import streamlit as st
+import html
 import json
 import os
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Any
+from services.ui.utils.page_template import page_chrome
 
 st.set_page_config(
     page_title="Community & Ambassadors — YES AI CAN",
     layout="wide"
 )
 
-# Metadata storage
-META_DIR = Path(__file__).parent.parent.parent.parent / ".sandbox_meta"
-HUMANS_FILE = META_DIR / "humans.json"
-PROJECTS_FILE = META_DIR / "projects.json"
-META_DIR.mkdir(exist_ok=True)
+# Storage goes through meta_store, which resolves the one .sandbox_meta the
+# rest of the app writes to. The previous parent.parent.parent.parent hop
+# landed on an empty directory at the repo root, so this page always showed
+# zero profiles however many were saved.
+from services.ui.utils.meta_store import load_json
+
 
 def load_humans() -> List[Dict]:
-    """Load all humans."""
-    if HUMANS_FILE.exists():
-        try:
-            with open(HUMANS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except:
-            return []
-    return []
+    data = load_json("humans.json", [])
+    return data if isinstance(data, list) else []
+
 
 def load_projects() -> List[Dict]:
-    """Load all projects."""
-    if PROJECTS_FILE.exists():
-        try:
-            with open(PROJECTS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except:
-            return []
-    return []
+    data = load_json("projects.json", [])
+    return data if isinstance(data, list) else []
 
 # Page header
-st.title("🌍 Community & Ambassadors")
+page_chrome("community_ambassadors", "Community", "Ambassadors, cohorts and contributors.")
 st.markdown("**YES AI CAN — Rackers Lab & Community**")
 st.markdown("---")
 
 humans = load_humans()
 projects = load_projects()
 
-# Tabs: Ambassadors, Leaderboard, Top Projects, Events
-tab1, tab2, tab3, tab4 = st.tabs(["🌟 Ambassadors", "🏆 Leaderboard", "⭐ Top Projects", "📅 Events"])
+def render_directory(profiles: List[Dict]) -> None:
+    """The Human Stack directory — who is in our Community and what they bring.
+
+    A table rather than cards: the question people arrive with is "who knows
+    X", and scanning a skills column answers it far faster than reading down a
+    grid of profile tiles.
+    """
+    if not profiles:
+        st.info("No profiles yet. Add yours from People & Skills.")
+        return
+
+    st.markdown("""
+    <style>
+    .hs-tbl-wrap { background:var(--pc-surface); border:1px solid var(--pc-rule);
+                   border-radius:14px; overflow-x:auto; box-shadow:var(--pc-shadow); }
+    .hs-tbl { width:100%; border-collapse:collapse; font-size:.85rem; min-width:940px; }
+    .hs-tbl thead th { background:var(--pc-surface-alt); color:var(--pc-ink-faint);
+                       font-size:.72rem; font-weight:650; letter-spacing:.03em;
+                       text-transform:uppercase; text-align:left; padding:.6rem .75rem;
+                       border-bottom:1px solid var(--pc-rule); white-space:nowrap; }
+    .hs-tbl td { padding:.65rem .75rem; border-bottom:1px solid var(--pc-rule);
+                 color:var(--pc-ink-soft); vertical-align:top; }
+    .hs-tbl tr:last-child td { border-bottom:none; }
+    .hs-tbl .nm { font-weight:650; color:var(--pc-ink); }
+    .hs-chip { display:inline-block; background:var(--pc-indigo-wash);
+               color:var(--pc-indigo-dark); border-radius:6px; padding:.1rem .4rem;
+               font-size:.72rem; margin:0 .25rem .25rem 0; white-space:nowrap; }
+    .hs-chip.built { background:var(--pc-green-wash); color:var(--pc-green); }
+    .hs-stars { color:#f59e0b; white-space:nowrap; }
+    </style>
+    """, unsafe_allow_html=True)
+
+    def chips(values, extra: str = "") -> str:
+        items = values if isinstance(values, list) else [values]
+        cleaned = [str(v).strip() for v in items if str(v or "").strip()]
+        if not cleaned:
+            return "<span style='color:var(--pc-ink-faint)'>—</span>"
+        return "".join(
+            f"<span class='hs-chip {extra}'>{html.escape(v)}</span>" for v in cleaned[:6])
+
+    rows = []
+    for person in profiles:
+        rating = person.get("rating") or person.get("badge_rating") or 0
+        try:
+            stars = "★" * int(round(float(rating))) or "—"
+        except (TypeError, ValueError):
+            stars = "—"
+        feedback = str(person.get("feedback") or person.get("badge") or "").strip()
+        rows.append(
+            "<tr>"
+            f"<td class='nm'>{html.escape(str(person.get('name') or '—'))}</td>"
+            f"<td>{html.escape(str(person.get('department') or '—'))}</td>"
+            f"<td>{html.escape(str(person.get('region') or '—'))}</td>"
+            f"<td>{chips(person.get('skills') or person.get('expertise') or [])}</td>"
+            f"<td>{chips(person.get('projects_built') or person.get('products_built') or [], 'built')}</td>"
+            f"<td><span class='hs-stars'>{stars}</span>"
+            f"<div style='font-size:.74rem;color:var(--pc-ink-faint)'>"
+            f"{html.escape(feedback[:70]) or 'No feedback yet'}</div></td>"
+            "</tr>"
+        )
+
+    st.markdown(
+        "<div class='hs-tbl-wrap'><table class='hs-tbl'><thead><tr>"
+        "<th>Name</th><th>Department</th><th>Region</th><th>Skills / Expertise</th>"
+        "<th>Products Built</th><th>Badge of Honor &amp; Feedback</th>"
+        "</tr></thead><tbody>" + "".join(rows) + "</tbody></table></div>",
+        unsafe_allow_html=True)
+
+
+# People & Skills is folded in here rather than living in its own rail entry:
+# finding someone and reading about the community are the same errand. Its three
+# tabs are imported, not rebuilt — the profile form alone is 140 lines of state
+# handling that would drift the moment there were two of it.
+from services.ui.utils import embed_flags
+
+embed_flags.PROFILES_EMBEDDED = True
+try:
+    from services.ui.pages import human_stack as profiles
+finally:
+    embed_flags.PROFILES_EMBEDDED = False
+
+st.markdown(profiles.STAR_CSS, unsafe_allow_html=True)
+
+tab0, tab_new, tab_find, tab1, tab2, tab3, tab4 = st.tabs([
+    "👥 Directory", "➕ Create/Edit Profile", "🔍 Search & Filter",
+    "🌟 Ambassadors", "🏆 Leaderboard", "⭐ Top Projects", "📅 Events",
+])
+
+with tab0:
+    st.subheader(f"Human Stack Directory — {len(humans)} Profiles")
+    st.caption("Who is in our Community, what they know, and what they have built.")
+    render_directory(humans)
+    st.divider()
+    st.caption("Full profile cards, with view / edit / delete:")
+    profiles.render_directory()
+
+with tab_new:
+    profiles.render_profile_form()
+
+with tab_find:
+    profiles.render_search()
 
 with tab1:
     st.subheader("AI Ambassador Cohorts")
@@ -133,20 +224,47 @@ with tab2:
 
 with tab3:
     st.subheader("Top Projects by Stars")
-    
+
     # Sort projects by stars
     sorted_projects = sorted(projects, key=lambda x: x.get('stars', 0), reverse=True)
-    
+
     if not sorted_projects:
         st.info("⭐ No projects yet. Submit your first project!")
     else:
         for idx, project in enumerate(sorted_projects[:10], 1):
             medal = "🥇" if idx == 1 else "🥈" if idx == 2 else "🥉" if idx == 3 else f"#{idx}"
-            with st.expander(f"{medal} {project.get('title', 'Untitled')} — ⭐ {project.get('stars', 0)} stars"):
+            units = [u for u in project.get('business_units', []) if u]
+            # A project spanning units is the interesting case, so say so in the
+            # header — that is what someone is scanning this list for.
+            span = f" · needs {len(units)} business units" if len(units) > 1 else ""
+            title = project.get('title', 'Untitled')
+            with st.expander(f"{medal} {title} — ⭐ {project.get('stars', 0)} stars{span}"):
                 st.write(f"**Description:** {project.get('description', 'N/A')}")
                 st.write(f"**Authors:** {', '.join(project.get('authors', []))}")
                 st.write(f"**Phase:** {project.get('phase', 'N/A')}")
-                st.write(f"**Tags:** {', '.join(project.get('tags', []))}")
+
+                if units:
+                    st.write(f"**Business units involved:** {', '.join(units)}")
+
+                expertise = [e for e in project.get('expertise_needed', []) if e]
+                if expertise:
+                    st.markdown("**Expertise needed**")
+                    for item in expertise:
+                        st.markdown(f"- {item}")
+
+                closes = [t for t in project.get('closes_titles', []) if t]
+                if closes:
+                    st.markdown(f"**Painpoints this would close ({len(closes)})**")
+                    for item in closes:
+                        st.markdown(f"- {item}")
+
+                if project.get('blocked_on'):
+                    st.warning(f"**Blocked on:** {project['blocked_on']}")
+                if project.get('ask'):
+                    st.info(f"**The ask:** {project['ask']}")
+
+                if project.get('tags'):
+                    st.caption("Tags: " + ", ".join(project['tags']))
 
 with tab4:
     st.subheader("Upcoming Events & Activities")

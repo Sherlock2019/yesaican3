@@ -6,7 +6,7 @@ import streamlit as st
 
 def apply_dark_theme():
     """
-    Apply Rackspace FAIR-style dark theme for consistency across all agents.
+    Apply our Community FAIR-style dark theme for consistency across all agents.
     This CSS overrides Streamlit defaults with modern typography and layout.
     """
     st.markdown("""

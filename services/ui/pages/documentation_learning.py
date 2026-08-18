@@ -3,30 +3,37 @@
 
 import streamlit as st
 from pathlib import Path
+from services.ui.utils.page_template import page_chrome
 
 st.set_page_config(
     page_title="Documentation & Learning — YES AI CAN",
     layout="wide"
 )
 
+
 # Page header
-st.title("📚 Documentation & Learning")
-st.markdown("**YES AI CAN — Rackers Lab & Community**")
+page_chrome("documentation_learning", "Getting Started",
+            "How to get started, plus resources and answers.")
+st.markdown("**YES AI CAN — our Community's Lab**")
 st.markdown("---")
 
-# Tabs: Getting Started, Guides, Resources, FAQs
-tab1, tab2, tab3, tab4 = st.tabs(["🚀 Getting Started", "📖 Guides", "📚 Resources", "❓ FAQs"])
+# Guides removed: every step it described now lives on the page that does the
+# thing, and a second copy here drifted out of date the moment a page moved.
+tab1, tab3, tab4 = st.tabs(["🚀 Getting Started", "📚 Resources", "❓ FAQs"])
 
 with tab1:
     st.subheader("Getting Started with YES AI CAN")
-    
+
+    # Destinations are named as they appear in the sidebar today. The old text
+    # pointed at "Human Stack Directory" and "Agent Library", neither of which
+    # is what the rail says any more, so the steps could not be followed.
     st.markdown("""
     ### Welcome to YES AI CAN!
-    
-    **YES AI CAN** is Rackspace's internal AI innovation ecosystem. Here's how to get started:
-    
+
+    **YES AI CAN** is our Community's internal AI innovation ecosystem. Here's how to get started:
+
     #### Step 1: Create Your Profile
-    1. Navigate to **👤 Human Stack Directory**
+    1. Navigate to **👤 People & Skills**
     2. Click **➕ Create/Edit Profile**
     3. Fill in your information:
        - Name, Department, Team, Role
@@ -34,83 +41,26 @@ with tab1:
        - Resume upload
        - Portfolio/GitHub links
     4. Save your profile
-    
-    #### Step 2: Explore Projects
-    1. Go to **🧱 Project Hub**
-    2. Browse existing AI projects by Rackers
-    3. Filter by phase, tags, or search
-    4. Star projects you find interesting
-    
-    #### Step 3: Test Agents
-    1. Visit **🤖 Agent Library**
-    2. Browse available Customer ZERO agents
-    3. Launch agents in the sandbox
-    4. Provide feedback and suggestions
-    
-    #### Step 4: Contribute
-    - Submit your own projects
-    - Share reusable patterns
-    - Join the AI Ambassador program
-    - Help build the Customer ZERO → Customer ONE library
+
+    #### Step 2: Submit Your Painpoint
+    1. Go to **📍 Submit My PainPoints**
+    2. List what is slow, manual, repetitive or error-prone — one line each
+    3. Say where your task sits on **My Company Workflows**
+    4. Pick the outcomes that matter and submit
+
+    #### Step 3: Help Someone Else
+    1. Open **🚩 Current Submitted PainPoints**
+    2. Find one still marked *Open — needs a helper*
+    3. Press **🤝 I can help**, or go to **💡 Propose a Cure**
+    4. Describe what your solution does, how, and which AI tools it uses
+
+    #### Step 4: Build and Publish
+    1. Track progress on **🔀 Current Challenge Pipeline**
+    2. Draft the POC from its ontology blueprint on **🧪 Current POC**
+    3. Tick off the acceptance criteria as you prove it
+    4. Publish it to the **🤖 Community Agent Library**, where the next matching
+       painpoint can reuse it
     """)
-
-with tab2:
-    st.subheader("Learning Guides")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("""
-        ### 🧱 Project Submission Guide
-        
-        **How to submit a new project:**
-        
-        1. Go to **Project Hub** → **➕ Submit Project**
-        2. Fill in project details:
-           - Title and description
-           - What / So What / For Who / How / Where
-           - Current phase (Incubation / MVP / Production)
-           - Tags and links
-        3. Upload artifacts (screenshots, PDFs)
-        4. Submit and share with the community
-        
-        ### 🤖 Agent Library Guide
-        
-        **How to add an agent:**
-        
-        1. Navigate to **Agent Library** → **➕ Add Agent**
-        2. Provide agent metadata:
-           - Name, version, description
-           - Industry vertical
-           - Inputs/outputs
-           - Required datasets/models
-        3. Set status (Draft / Prototype / Customer READY)
-        4. Save to library
-        """)
-    
-    with col2:
-        st.markdown("""
-        ### 👤 Profile Best Practices
-        
-        **Make your profile stand out:**
-        
-        - List all relevant skills (AI, ML, domain expertise)
-        - Upload your resume
-        - Link to GitHub/Portfolio
-        - Add domain expertise tags
-        - Join the AI Ambassador program
-        
-        ### 🧠 Ontology & Patterns
-        
-        **How to contribute patterns:**
-        
-        1. Go to **Ontology & Patterns** → **➕ Add New**
-        2. Choose Pattern or Ontology Entry
-        3. Provide template code and examples
-        4. Tag appropriately
-        5. Share with the community
-        """)
-
 with tab3:
     st.subheader("Learning Resources")
     
@@ -140,7 +90,7 @@ with tab4:
     
     with st.expander("What is YES AI CAN?"):
         st.write("""
-        YES AI CAN is Rackspace's internal AI innovation ecosystem, built to map our global AI skills, 
+        YES AI CAN is our Community's internal AI innovation ecosystem, built to map our global AI skills, 
         showcase AI projects, provide zero-code tools for building agents, and accelerate reuse through 
         a shared Customer ZERO agent library.
         """)
@@ -154,7 +104,7 @@ with tab4:
     with st.expander("How do I become an AI Ambassador?"):
         st.write("""
         Visit the **🌍 Community & Ambassadors** page and click "Apply to Ambassador Program". 
-        Ambassadors help drive AI innovation across Rackspace.
+        Ambassadors help drive AI innovation across our Community.
         """)
     
     with st.expander("What is Customer ZERO vs Customer ONE?"):

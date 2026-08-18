@@ -1,5 +1,2502 @@
 [
   {
+    "id": "sample_challenge_1",
+    "is_sample": true,
+    "title": "Every customer wants their invoice in a different layout",
+    "description": "Each account has its own invoice format, so every billing run I take our standard invoice export and rebuild it by hand per customer - different column names, different date formats, different line-item grouping. One wrong charge line and the customer disputes the whole invoice.",
+    "submitter": {
+      "name": "Gerry Osei",
+      "department": "Billing",
+      "region": "Global",
+      "role": "Practitioner"
+    },
+    "category": "Billing",
+    "pain_type": "billing",
+    "difficulty": "Medium",
+    "confidentiality": "Internal",
+    "upvotes": 12,
+    "comments": 0,
+    "urgency": 7.5,
+    "impact_score": 9.2,
+    "similar_agents": [],
+    "created_at": "2026-06-18T07:38:18.661821+00:00",
+    "twin_context": {
+      "business_unit": "Billing",
+      "task": "Create invoice",
+      "input": "Billing export",
+      "input_from": "Billing export",
+      "flow_edge": "billing>invoice>finance",
+      "flow_object": "Invoice",
+      "output_to": "Finance",
+      "output_flow": "Invoice -> Collect payment"
+    },
+    "baseline": {
+      "steps": 14,
+      "minutes_per_task": 45.0,
+      "frequency": 250.0,
+      "frequency_unit": "per month",
+      "who_affected": "My department",
+      "reach_multiplier": 1.7,
+      "tasks_per_year": 3000.0,
+      "tasks_per_month": 250.0,
+      "monthly_hours": 187.5,
+      "annual_hours": 2250.0,
+      "annual_hours_at_half": 1125.0,
+      "pain_score": 79,
+      "level": "HIGH",
+      "level_class": "high"
+    },
+    "opportunity": {
+      "impact": 92,
+      "complexity": 36,
+      "readiness": 75,
+      "score": 81,
+      "classification": "QUICK WIN",
+      "time_to_first_value": "2 weeks",
+      "projected_annual_hours_saved": 1800.0,
+      "reusable_agents": []
+    },
+    "outcomes": [
+      "save_time",
+      "reduce_errors",
+      "fewer_steps"
+    ],
+    "current_workflow": [
+      "Export the billing run from the billing platform",
+      "Open the customer's format template",
+      "Map our columns onto theirs by hand",
+      "Re-check every charge line against the source",
+      "Send the invoice and file a copy for Finance"
+    ],
+    "workflow_source": "sample",
+    "metrics": [
+      {
+        "key": "time_per_task",
+        "label": "Human time / task",
+        "icon": "⏱",
+        "unit": "min",
+        "group": "human",
+        "better": "lower",
+        "before": "45 min",
+        "target": "<9 min",
+        "actual": "—"
+      },
+      {
+        "key": "error_rate",
+        "label": "Error rate",
+        "icon": "⚠️",
+        "unit": "%",
+        "group": "human",
+        "better": "lower",
+        "before": "—",
+        "target": "<2%",
+        "actual": "—"
+      },
+      {
+        "key": "rework_rate",
+        "label": "Rework rate",
+        "icon": "🔄",
+        "unit": "%",
+        "group": "human",
+        "better": "lower",
+        "before": "—",
+        "target": "<2%",
+        "actual": "—"
+      },
+      {
+        "key": "steps_per_task",
+        "label": "Steps / task",
+        "icon": "👣",
+        "unit": "steps",
+        "group": "human",
+        "better": "lower",
+        "before": "14",
+        "target": "<5",
+        "actual": "—"
+      },
+      {
+        "key": "manual_interventions",
+        "label": "Manual interventions",
+        "icon": "✋",
+        "unit": "/task",
+        "group": "human",
+        "better": "lower",
+        "before": "10",
+        "target": "<3",
+        "actual": "—"
+      }
+    ],
+    "poc": {
+      "integration": {
+        "owner": "Billing",
+        "task": "Create invoice",
+        "input": "Billing export",
+        "input_from": "Billing export",
+        "output_to": "Finance",
+        "handoff": "Invoice -> Collect payment"
+      },
+      "id": "poc_every-customer-wants-their-invoice-in-a-",
+      "name": "Normalise — Every Customer Wants Their Invoice Agent",
+      "pain_type": "billing",
+      "pattern": "Normalise → Reconcile → Explain → Post",
+      "objects": [
+        "Dataset",
+        "Customer",
+        "Policy",
+        "Event"
+      ],
+      "capabilities": [
+        "Normalise each customer's layout to the internal schema",
+        "Reconcile line by line and isolate the deltas",
+        "Explain every delta in one sentence a human can check",
+        "Post only what reconciles; hold the rest"
+      ],
+      "tools": [
+        "Layout templates",
+        "Ledger read access",
+        "Reconciliation rules",
+        "Exception report"
+      ],
+      "guardrail": "An unexplained delta blocks the post. Silence is never treated as agreement.",
+      "sector": "Finance Operations",
+      "industry": "💳 Billing",
+      "build_steps": [
+        "Normalise: Export the billing run from the billing platform",
+        "Reconcile: Open the customer's format template",
+        "Explain: Map our columns onto theirs by hand",
+        "Post: Re-check every charge line against the source; Send the invoice and file a copy for Finance"
+      ],
+      "acceptance": [
+        {
+          "key": "time_per_task",
+          "label": "Human time / task",
+          "unit": "min",
+          "before": "45 min",
+          "target": "<9 min",
+          "actual": "—",
+          "better": "lower",
+          "met": true
+        },
+        {
+          "key": "error_rate",
+          "label": "Error rate",
+          "unit": "%",
+          "before": "—",
+          "target": "<2%",
+          "actual": "—",
+          "better": "lower",
+          "met": true
+        },
+        {
+          "key": "rework_rate",
+          "label": "Rework rate",
+          "unit": "%",
+          "before": "—",
+          "target": "<2%",
+          "actual": "—",
+          "better": "lower",
+          "met": true
+        },
+        {
+          "key": "steps_per_task",
+          "label": "Steps / task",
+          "unit": "steps",
+          "before": "14",
+          "target": "<5",
+          "actual": "—",
+          "better": "lower",
+          "met": true
+        },
+        {
+          "key": "manual_interventions",
+          "label": "Manual interventions",
+          "unit": "/task",
+          "before": "10",
+          "target": "<3",
+          "actual": "—",
+          "better": "lower",
+          "met": true
+        },
+        {
+          "key": "human_review",
+          "label": "Human review path works",
+          "unit": "",
+          "before": null,
+          "target": "verified",
+          "actual": null,
+          "better": "higher",
+          "met": true
+        },
+        {
+          "key": "handoff_accepted",
+          "label": "Output accepted by Finance",
+          "unit": "",
+          "before": null,
+          "target": "accepted",
+          "actual": null,
+          "better": "higher",
+          "met": true
+        }
+      ],
+      "effort_days": 5,
+      "reuse": [],
+      "github": "yesaican/every-customer-wants-their-invoice-in-a-",
+      "platform": "Streamlit",
+      "demo_url": "https://lab.internal/poc_every-customer-wants-their-invoice-in-a-",
+      "owner": "Marta Lindqvist",
+      "notes": "",
+      "status": "Live",
+      "created_at": "2026-08-18T07:38:18.666009+00:00"
+    },
+    "published_agent": "Normalise — Every Customer Wants Their Invoice Agent"
+  },
+  {
+    "id": "sample_challenge_2",
+    "is_sample": true,
+    "title": "Payments that do not match the invoice get chased by hand",
+    "description": "When a payment lands that does not reconcile to an invoice, I work backwards through bank statements, credit notes and email to find where the difference came from. Most turn out to be a partial payment or a credit note that nobody applied to the ledger.",
+    "submitter": {
+      "name": "Marta Lindqvist",
+      "department": "Finance",
+      "region": "Global",
+      "role": "Practitioner"
+    },
+    "category": "Billing",
+    "pain_type": "billing",
+    "difficulty": "Medium",
+    "confidentiality": "Internal",
+    "upvotes": 7,
+    "comments": 0,
+    "urgency": 7.5,
+    "impact_score": 7.6,
+    "similar_agents": [],
+    "created_at": "2026-07-15T07:38:18.661821+00:00",
+    "twin_context": {
+      "business_unit": "Finance",
+      "task": "Reconcile ledger",
+      "input": "Invoice from Billing",
+      "input_from": "Invoice from Billing",
+      "flow_edge": "",
+      "flow_object": "",
+      "output_to": "Customer Success",
+      "output_flow": ""
+    },
+    "baseline": {
+      "steps": 18,
+      "minutes_per_task": 65.0,
+      "frequency": 60.0,
+      "frequency_unit": "per month",
+      "who_affected": "My team",
+      "reach_multiplier": 1.35,
+      "tasks_per_year": 720.0,
+      "tasks_per_month": 60.0,
+      "monthly_hours": 65.0,
+      "annual_hours": 780.0,
+      "annual_hours_at_half": 390.0,
+      "pain_score": 68,
+      "level": "HIGH",
+      "level_class": "high"
+    },
+    "opportunity": {
+      "impact": 76,
+      "complexity": 40,
+      "readiness": 75,
+      "score": 72,
+      "classification": "QUICK WIN",
+      "time_to_first_value": "2 weeks",
+      "projected_annual_hours_saved": 624.0,
+      "reusable_agents": []
+    },
+    "outcomes": [
+      "save_time",
+      "reduce_errors"
+    ],
+    "current_workflow": [
+      "Pull the unmatched payments report",
+      "Open the invoice and the bank statement side by side",
+      "Trace credit notes and partial payments",
+      "Email the account owner if it still does not tie out",
+      "Post the adjustment and note the reason"
+    ],
+    "workflow_source": "sample",
+    "metrics": [
+      {
+        "key": "time_per_task",
+        "label": "Human time / task",
+        "icon": "⏱",
+        "unit": "min",
+        "group": "human",
+        "better": "lower",
+        "before": "65 min",
+        "target": "<13 min",
+        "actual": "—"
+      },
+      {
+        "key": "error_rate",
+        "label": "Error rate",
+        "icon": "⚠️",
+        "unit": "%",
+        "group": "human",
+        "better": "lower",
+        "before": "—",
+        "target": "<2%",
+        "actual": "—"
+      },
+      {
+        "key": "rework_rate",
+        "label": "Rework rate",
+        "icon": "🔄",
+        "unit": "%",
+        "group": "human",
+        "better": "lower",
+        "before": "—",
+        "target": "<2%",
+        "actual": "—"
+      }
+    ],
+    "poc": {
+      "integration": {
+        "owner": "Finance",
+        "task": "Reconcile ledger",
+        "input": "Invoice from Billing",
+        "input_from": "Invoice from Billing",
+        "output_to": "Customer Success",
+        "handoff": ""
+      },
+      "id": "poc_payments-that-do-not-match-the-invoice-g",
+      "name": "Normalise — Payments That Do Not Match Agent",
+      "pain_type": "billing",
+      "pattern": "Normalise → Reconcile → Explain → Post",
+      "objects": [
+        "Dataset",
+        "Customer",
+        "Policy",
+        "Event"
+      ],
+      "capabilities": [
+        "Normalise each customer's layout to the internal schema",
+        "Reconcile line by line and isolate the deltas",
+        "Explain every delta in one sentence a human can check",
+        "Post only what reconciles; hold the rest"
+      ],
+      "tools": [
+        "Layout templates",
+        "Ledger read access",
+        "Reconciliation rules",
+        "Exception report"
+      ],
+      "guardrail": "An unexplained delta blocks the post. Silence is never treated as agreement.",
+      "sector": "Finance Operations",
+      "industry": "💳 Billing",
+      "build_steps": [
+        "Normalise: Pull the unmatched payments report",
+        "Reconcile: Open the invoice and the bank statement side by side",
+        "Explain: Trace credit notes and partial payments",
+        "Post: Email the account owner if it still does not tie out; Post the adjustment and note the reason"
+      ],
+      "acceptance": [
+        {
+          "key": "time_per_task",
+          "label": "Human time / task",
+          "unit": "min",
+          "before": "65 min",
+          "target": "<13 min",
+          "actual": "—",
+          "better": "lower",
+          "met": true
+        },
+        {
+          "key": "error_rate",
+          "label": "Error rate",
+          "unit": "%",
+          "before": "—",
+          "target": "<2%",
+          "actual": "—",
+          "better": "lower",
+          "met": true
+        },
+        {
+          "key": "rework_rate",
+          "label": "Rework rate",
+          "unit": "%",
+          "before": "—",
+          "target": "<2%",
+          "actual": "—",
+          "better": "lower",
+          "met": true
+        },
+        {
+          "key": "human_review",
+          "label": "Human review path works",
+          "unit": "",
+          "before": null,
+          "target": "verified",
+          "actual": null,
+          "better": "higher",
+          "met": true
+        },
+        {
+          "key": "handoff_accepted",
+          "label": "Output accepted by Customer Success",
+          "unit": "",
+          "before": null,
+          "target": "accepted",
+          "actual": null,
+          "better": "higher",
+          "met": true
+        }
+      ],
+      "effort_days": 5,
+      "reuse": [],
+      "github": "yesaican/payments-that-do-not-match-the-invoice-g",
+      "platform": "Streamlit",
+      "demo_url": "https://lab.internal/poc_payments-that-do-not-match-the-invoice-g",
+      "owner": "Mateo Duarte",
+      "notes": "",
+      "status": "Live",
+      "created_at": "2026-08-18T07:38:18.666154+00:00"
+    }
+  },
+  {
+    "id": "sample_challenge_3",
+    "is_sample": true,
+    "title": "Order forms and contracts get retyped into the CRM",
+    "description": "A signed order form arrives as a scanned PDF attachment. I read it and retype the terms, dates and pricing into the CRM. Extracting the same fields from a document the customer already filled in is not selling.",
+    "submitter": {
+      "name": "Chidi Nwosu",
+      "department": "Sales",
+      "region": "Global",
+      "role": "Practitioner"
+    },
+    "category": "Document processing",
+    "pain_type": "document",
+    "difficulty": "Medium",
+    "confidentiality": "Internal",
+    "upvotes": 9,
+    "comments": 0,
+    "urgency": 7.5,
+    "impact_score": 7.4,
+    "similar_agents": [],
+    "created_at": "2026-07-01T07:38:18.661821+00:00",
+    "twin_context": {
+      "business_unit": "Sales",
+      "task": "Create proposal",
+      "input": "Signed order form (PDF)",
+      "input_from": "Signed order form (PDF)",
+      "flow_edge": "sales>proposal>legal",
+      "flow_object": "Proposal",
+      "output_to": "Legal",
+      "output_flow": "Proposal -> Review contract"
+    },
+    "baseline": {
+      "steps": 12,
+      "minutes_per_task": 35.0,
+      "frequency": 90.0,
+      "frequency_unit": "per month",
+      "who_affected": "My team",
+      "reach_multiplier": 1.35,
+      "tasks_per_year": 1080.0,
+      "tasks_per_month": 90.0,
+      "monthly_hours": 52.5,
+      "annual_hours": 630.0,
+      "annual_hours_at_half": 315.0,
+      "pain_score": 65,
+      "level": "HIGH",
+      "level_class": "high"
+    },
+    "opportunity": {
+      "impact": 74,
+      "complexity": 33,
+      "readiness": 75,
+      "score": 73,
+      "classification": "QUICK WIN",
+      "time_to_first_value": "2 weeks",
+      "projected_annual_hours_saved": 504.0,
+      "reusable_agents": []
+    },
+    "outcomes": [
+      "save_time",
+      "reduce_errors"
+    ],
+    "current_workflow": [
+      "Open the signed order form attachment",
+      "Read off terms, dates, pricing and entity name",
+      "Retype each field into the CRM opportunity",
+      "Re-read the document to check nothing was missed",
+      "Attach the PDF and hand off to Legal"
+    ],
+    "workflow_source": "sample",
+    "metrics": [
+      {
+        "key": "time_per_task",
+        "label": "Human time / task",
+        "icon": "⏱",
+        "unit": "min",
+        "group": "human",
+        "better": "lower",
+        "before": "35 min",
+        "target": "<7 min",
+        "actual": "—"
+      },
+      {
+        "key": "accuracy",
+        "label": "Accuracy",
+        "icon": "🎯",
+        "unit": "%",
+        "group": "human",
+        "better": "higher",
+        "before": "—",
+        "target": ">98%",
+        "actual": "—"
+      },
+      {
+        "key": "extraction_accuracy",
+        "label": "Extraction accuracy",
+        "icon": "🔍",
+        "unit": "%",
+        "group": "human",
+        "better": "higher",
+        "before": "—",
+        "target": ">97%",
+        "actual": "—"
+      },
+      {
+        "key": "error_rate",
+        "label": "Error rate",
+        "icon": "⚠️",
+        "unit": "%",
+        "group": "human",
+        "better": "lower",
+        "before": "—",
+        "target": "<2%",
+        "actual": "—"
+      },
+      {
+        "key": "rework_rate",
+        "label": "Rework rate",
+        "icon": "🔄",
+        "unit": "%",
+        "group": "human",
+        "better": "lower",
+        "before": "—",
+        "target": "<2%",
+        "actual": "—"
+      }
+    ],
+    "poc": {
+      "integration": {
+        "owner": "Sales",
+        "task": "Create proposal",
+        "input": "Signed order form (PDF)",
+        "input_from": "Signed order form (PDF)",
+        "output_to": "Legal",
+        "handoff": "Proposal -> Review contract"
+      },
+      "id": "poc_order-forms-and-contracts-get-retyped-in",
+      "name": "Ingest — Order Forms And Contracts Get Agent",
+      "pain_type": "document",
+      "pattern": "Ingest → Extract → Validate → Emit",
+      "objects": [
+        "Document",
+        "Dataset",
+        "Policy"
+      ],
+      "capabilities": [
+        "Accept PDFs, scans and images without pre-sorting",
+        "Pull the named fields out with a confidence score",
+        "Check each field against its expected type and range",
+        "Route low-confidence extractions to a human queue"
+      ],
+      "tools": [
+        "OCR / document parser",
+        "Field schema",
+        "Confidence thresholds",
+        "Review queue"
+      ],
+      "guardrail": "Below the confidence threshold the agent asks; it never guesses.",
+      "sector": "Document Intelligence",
+      "industry": "📄 Document Processing",
+      "build_steps": [
+        "Ingest: Open the signed order form attachment",
+        "Extract: Read off terms, dates, pricing and entity name",
+        "Validate: Retype each field into the CRM opportunity",
+        "Emit: Re-read the document to check nothing was missed; Attach the PDF and hand off to Legal"
+      ],
+      "acceptance": [
+        {
+          "key": "time_per_task",
+          "label": "Human time / task",
+          "unit": "min",
+          "before": "35 min",
+          "target": "<7 min",
+          "actual": "—",
+          "better": "lower",
+          "met": true
+        },
+        {
+          "key": "accuracy",
+          "label": "Accuracy",
+          "unit": "%",
+          "before": "—",
+          "target": ">98%",
+          "actual": "—",
+          "better": "higher",
+          "met": true
+        },
+        {
+          "key": "extraction_accuracy",
+          "label": "Extraction accuracy",
+          "unit": "%",
+          "before": "—",
+          "target": ">97%",
+          "actual": "—",
+          "better": "higher",
+          "met": true
+        },
+        {
+          "key": "error_rate",
+          "label": "Error rate",
+          "unit": "%",
+          "before": "—",
+          "target": "<2%",
+          "actual": "—",
+          "better": "lower",
+          "met": true
+        },
+        {
+          "key": "rework_rate",
+          "label": "Rework rate",
+          "unit": "%",
+          "before": "—",
+          "target": "<2%",
+          "actual": "—",
+          "better": "lower",
+          "met": true
+        },
+        {
+          "key": "human_review",
+          "label": "Human review path works",
+          "unit": "",
+          "before": null,
+          "target": "verified",
+          "actual": null,
+          "better": "higher",
+          "met": true
+        },
+        {
+          "key": "handoff_accepted",
+          "label": "Output accepted by Legal",
+          "unit": "",
+          "before": null,
+          "target": "accepted",
+          "actual": null,
+          "better": "higher",
+          "met": true
+        }
+      ],
+      "effort_days": 5,
+      "reuse": [],
+      "github": "yesaican/order-forms-and-contracts-get-retyped-in",
+      "platform": "Streamlit",
+      "demo_url": "https://lab.internal/poc_order-forms-and-contracts-get-retyped-in",
+      "owner": "Aisha Kone",
+      "notes": "",
+      "status": "Live",
+      "created_at": "2026-08-18T07:38:18.666321+00:00"
+    },
+    "published_agent": "Ingest — Order Forms And Contracts Get Agent"
+  },
+  {
+    "id": "sample_challenge_4",
+    "is_sample": true,
+    "title": "Which clause version is current lives in an email thread",
+    "description": "Every redline round on a contract arrives as a new document attachment in a long email chain. To answer 'what does the liability clause say right now' I have to read the whole thread and diff the attachments by eye.",
+    "submitter": {
+      "name": "Elena Varga",
+      "department": "Legal",
+      "region": "Global",
+      "role": "Practitioner"
+    },
+    "category": "Document processing",
+    "pain_type": "document",
+    "difficulty": "Medium",
+    "confidentiality": "Internal",
+    "upvotes": 6,
+    "comments": 0,
+    "urgency": 5.5,
+    "impact_score": 7.1,
+    "similar_agents": [],
+    "created_at": "2026-07-22T07:38:18.661821+00:00",
+    "twin_context": {
+      "business_unit": "Legal",
+      "task": "Review contract",
+      "input": "Proposal from Sales",
+      "input_from": "Proposal from Sales",
+      "flow_edge": "legal>contract>billing",
+      "flow_object": "Contract",
+      "output_to": "Billing",
+      "output_flow": "Contract -> Create invoice"
+    },
+    "baseline": {
+      "steps": 9,
+      "minutes_per_task": 90.0,
+      "frequency": 25.0,
+      "frequency_unit": "per month",
+      "who_affected": "My team",
+      "reach_multiplier": 1.35,
+      "tasks_per_year": 300.0,
+      "tasks_per_month": 25.0,
+      "monthly_hours": 37.5,
+      "annual_hours": 450.0,
+      "annual_hours_at_half": 225.0,
+      "pain_score": 62,
+      "level": "MODERATE",
+      "level_class": "moderate"
+    },
+    "opportunity": {
+      "impact": 71,
+      "complexity": 34,
+      "readiness": 75,
+      "score": 71,
+      "classification": "QUICK WIN",
+      "time_to_first_value": "2 weeks",
+      "projected_annual_hours_saved": 360.0,
+      "reusable_agents": []
+    },
+    "outcomes": [
+      "fewer_steps",
+      "compliance"
+    ],
+    "current_workflow": [
+      "Find the latest redline attachment in the thread",
+      "Open it against the previous version",
+      "Diff the clause by eye",
+      "Record the agreed wording in the tracker",
+      "Send the next round back to the counterparty"
+    ],
+    "workflow_source": "sample",
+    "metrics": [
+      {
+        "key": "time_per_task",
+        "label": "Human time / task",
+        "icon": "⏱",
+        "unit": "min",
+        "group": "human",
+        "better": "lower",
+        "before": "90 min",
+        "target": "<18 min",
+        "actual": "—"
+      },
+      {
+        "key": "accuracy",
+        "label": "Accuracy",
+        "icon": "🎯",
+        "unit": "%",
+        "group": "human",
+        "better": "higher",
+        "before": "—",
+        "target": ">98%",
+        "actual": "—"
+      },
+      {
+        "key": "extraction_accuracy",
+        "label": "Extraction accuracy",
+        "icon": "🔍",
+        "unit": "%",
+        "group": "human",
+        "better": "higher",
+        "before": "—",
+        "target": ">97%",
+        "actual": "—"
+      },
+      {
+        "key": "steps_per_task",
+        "label": "Steps / task",
+        "icon": "👣",
+        "unit": "steps",
+        "group": "human",
+        "better": "lower",
+        "before": "9",
+        "target": "<3",
+        "actual": "—"
+      },
+      {
+        "key": "manual_interventions",
+        "label": "Manual interventions",
+        "icon": "✋",
+        "unit": "/task",
+        "group": "human",
+        "better": "lower",
+        "before": "6",
+        "target": "<2",
+        "actual": "—"
+      },
+      {
+        "key": "compliance_rate",
+        "label": "Compliance rate",
+        "icon": "📋",
+        "unit": "%",
+        "group": "human",
+        "better": "higher",
+        "before": "—",
+        "target": "100%",
+        "actual": "—"
+      }
+    ],
+    "poc": {
+      "integration": {
+        "owner": "Legal",
+        "task": "Review contract",
+        "input": "Proposal from Sales",
+        "input_from": "Proposal from Sales",
+        "output_to": "Billing",
+        "handoff": "Contract -> Create invoice"
+      },
+      "id": "poc_which-clause-version-is-current-lives-in",
+      "name": "Ingest — Which Clause Version Is Current Agent",
+      "pain_type": "document",
+      "pattern": "Ingest → Extract → Validate → Emit",
+      "objects": [
+        "Document",
+        "Dataset",
+        "Policy"
+      ],
+      "capabilities": [
+        "Accept PDFs, scans and images without pre-sorting",
+        "Pull the named fields out with a confidence score",
+        "Check each field against its expected type and range",
+        "Route low-confidence extractions to a human queue"
+      ],
+      "tools": [
+        "OCR / document parser",
+        "Field schema",
+        "Confidence thresholds",
+        "Review queue"
+      ],
+      "guardrail": "Below the confidence threshold the agent asks; it never guesses.",
+      "sector": "Document Intelligence",
+      "industry": "📄 Document Processing",
+      "build_steps": [
+        "Ingest: Find the latest redline attachment in the thread",
+        "Extract: Open it against the previous version",
+        "Validate: Diff the clause by eye",
+        "Emit: Record the agreed wording in the tracker; Send the next round back to the counterparty"
+      ],
+      "acceptance": [
+        {
+          "key": "time_per_task",
+          "label": "Human time / task",
+          "unit": "min",
+          "before": "90 min",
+          "target": "<18 min",
+          "actual": "—",
+          "better": "lower",
+          "met": true
+        },
+        {
+          "key": "accuracy",
+          "label": "Accuracy",
+          "unit": "%",
+          "before": "—",
+          "target": ">98%",
+          "actual": "—",
+          "better": "higher",
+          "met": true
+        },
+        {
+          "key": "extraction_accuracy",
+          "label": "Extraction accuracy",
+          "unit": "%",
+          "before": "—",
+          "target": ">97%",
+          "actual": "—",
+          "better": "higher",
+          "met": true
+        },
+        {
+          "key": "steps_per_task",
+          "label": "Steps / task",
+          "unit": "steps",
+          "before": "9",
+          "target": "<3",
+          "actual": "—",
+          "better": "lower",
+          "met": true
+        },
+        {
+          "key": "manual_interventions",
+          "label": "Manual interventions",
+          "unit": "/task",
+          "before": "6",
+          "target": "<2",
+          "actual": "—",
+          "better": "lower",
+          "met": true
+        },
+        {
+          "key": "compliance_rate",
+          "label": "Compliance rate",
+          "unit": "%",
+          "before": "—",
+          "target": "100%",
+          "actual": "—",
+          "better": "higher",
+          "met": true
+        },
+        {
+          "key": "human_review",
+          "label": "Human review path works",
+          "unit": "",
+          "before": null,
+          "target": "verified",
+          "actual": null,
+          "better": "higher",
+          "met": true
+        },
+        {
+          "key": "handoff_accepted",
+          "label": "Output accepted by Billing",
+          "unit": "",
+          "before": null,
+          "target": "accepted",
+          "actual": null,
+          "better": "higher",
+          "met": true
+        }
+      ],
+      "effort_days": 5,
+      "reuse": [],
+      "github": "yesaican/which-clause-version-is-current-lives-in",
+      "platform": "Streamlit",
+      "demo_url": "https://lab.internal/poc_which-clause-version-is-current-lives-in",
+      "owner": "Chidi Nwosu",
+      "notes": "",
+      "status": "Live",
+      "created_at": "2026-08-18T07:38:18.666453+00:00"
+    }
+  },
+  {
+    "id": "sample_challenge_5",
+    "is_sample": true,
+    "title": "Campaign creative waits on three separate sign-offs",
+    "description": "Every campaign asset needs approval from brand, legal and the product owner. Each review cycle is chased separately, nobody can see who the approval is currently sitting with, and launch dates slip waiting on a gate that the approver did not know was theirs.",
+    "submitter": {
+      "name": "Sinead Byrne",
+      "department": "Marketing",
+      "region": "Global",
+      "role": "Practitioner"
+    },
+    "category": "Approval workflow",
+    "pain_type": "approval",
+    "difficulty": "Medium",
+    "confidentiality": "Internal",
+    "upvotes": 8,
+    "comments": 0,
+    "urgency": 5.5,
+    "impact_score": 6.5,
+    "similar_agents": [],
+    "created_at": "2026-08-03T07:38:18.661821+00:00",
+    "twin_context": {
+      "business_unit": "Marketing",
+      "task": "Produce qualified lead",
+      "input": "Campaign brief",
+      "input_from": "Campaign brief",
+      "flow_edge": "marketing>qualified_lead>sales",
+      "flow_object": "Qualified Lead",
+      "output_to": "Sales",
+      "output_flow": "Qualified Lead -> Qualify opportunity"
+    },
+    "baseline": {
+      "steps": 11,
+      "minutes_per_task": 40.0,
+      "frequency": 30.0,
+      "frequency_unit": "per month",
+      "who_affected": "My team",
+      "reach_multiplier": 1.35,
+      "tasks_per_year": 360.0,
+      "tasks_per_month": 30.0,
+      "monthly_hours": 20.0,
+      "annual_hours": 240.0,
+      "annual_hours_at_half": 120.0,
+      "pain_score": 56,
+      "level": "MODERATE",
+      "level_class": "moderate"
+    },
+    "opportunity": {
+      "impact": 65,
+      "complexity": 32,
+      "readiness": 75,
+      "score": 68,
+      "classification": "FILL-IN",
+      "time_to_first_value": "2 weeks",
+      "projected_annual_hours_saved": 192.0,
+      "reusable_agents": []
+    },
+    "outcomes": [
+      "save_time",
+      "fewer_steps"
+    ],
+    "current_workflow": [
+      "Send the asset to brand for sign-off",
+      "Chase brand, then forward to legal",
+      "Chase legal, then forward to the product owner",
+      "Collate the three approvals into the launch checklist",
+      "Release the campaign to Sales"
+    ],
+    "workflow_source": "sample",
+    "metrics": [
+      {
+        "key": "steps_per_task",
+        "label": "Steps / task",
+        "icon": "👣",
+        "unit": "steps",
+        "group": "human",
+        "better": "lower",
+        "before": "11",
+        "target": "<4",
+        "actual": "—"
+      },
+      {
+        "key": "time_per_task",
+        "label": "Human time / task",
+        "icon": "⏱",
+        "unit": "min",
+        "group": "human",
+        "better": "lower",
+        "before": "40 min",
+        "target": "<8 min",
+        "actual": "—"
+      },
+      {
+        "key": "manual_interventions",
+        "label": "Manual interventions",
+        "icon": "✋",
+        "unit": "/task",
+        "group": "human",
+        "better": "lower",
+        "before": "8",
+        "target": "<2",
+        "actual": "—"
+      }
+    ],
+    "poc": {
+      "integration": {
+        "owner": "Marketing",
+        "task": "Produce qualified lead",
+        "input": "Campaign brief",
+        "input_from": "Campaign brief",
+        "output_to": "Sales",
+        "handoff": "Qualified Lead -> Qualify opportunity"
+      },
+      "id": "poc_campaign-creative-waits-on-three-separat",
+      "name": "Check — Campaign Creative Waits On Three Agent",
+      "pain_type": "approval",
+      "pattern": "Check → Gather → Nudge → Record",
+      "objects": [
+        "Decision",
+        "Policy",
+        "Human",
+        "Event"
+      ],
+      "capabilities": [
+        "Check the request against the policy before anyone is asked",
+        "Gather the evidence an approver always ends up asking for",
+        "Nudge the one person the request is actually waiting on",
+        "Record the decision and the reason against the object"
+      ],
+      "tools": [
+        "Policy rules",
+        "Approver directory",
+        "Notification channel",
+        "Decision log"
+      ],
+      "guardrail": "The agent prepares and chases decisions. It never makes them.",
+      "sector": "Governance",
+      "industry": "✅ Approvals",
+      "build_steps": [
+        "Check: Send the asset to brand for sign-off",
+        "Gather: Chase brand, then forward to legal",
+        "Nudge: Chase legal, then forward to the product owner",
+        "Record: Collate the three approvals into the launch checklist; Release the campaign to Sales"
+      ],
+      "acceptance": [
+        {
+          "key": "steps_per_task",
+          "label": "Steps / task",
+          "unit": "steps",
+          "before": "11",
+          "target": "<4",
+          "actual": "—",
+          "better": "lower",
+          "met": true
+        },
+        {
+          "key": "time_per_task",
+          "label": "Human time / task",
+          "unit": "min",
+          "before": "40 min",
+          "target": "<8 min",
+          "actual": "—",
+          "better": "lower",
+          "met": false
+        },
+        {
+          "key": "manual_interventions",
+          "label": "Manual interventions",
+          "unit": "/task",
+          "before": "8",
+          "target": "<2",
+          "actual": "—",
+          "better": "lower",
+          "met": false
+        },
+        {
+          "key": "human_review",
+          "label": "Human review path works",
+          "unit": "",
+          "before": null,
+          "target": "verified",
+          "actual": null,
+          "better": "higher",
+          "met": false
+        },
+        {
+          "key": "handoff_accepted",
+          "label": "Output accepted by Sales",
+          "unit": "",
+          "before": null,
+          "target": "accepted",
+          "actual": null,
+          "better": "higher",
+          "met": false
+        }
+      ],
+      "effort_days": 5,
+      "reuse": [],
+      "github": "yesaican/campaign-creative-waits-on-three-separat",
+      "platform": "",
+      "demo_url": "",
+      "owner": "Yusuf Demir",
+      "notes": "",
+      "status": "Building",
+      "created_at": "2026-08-18T07:38:18.666578+00:00"
+    }
+  },
+  {
+    "id": "sample_challenge_6",
+    "is_sample": true,
+    "title": "Control exceptions need sign-off before every audit",
+    "description": "Ahead of each audit I chase an approval for every open control exception - who authorised it, until when, and on what basis. The review cycle runs across six teams and the gate stays invisible until the auditor asks.",
+    "submitter": {
+      "name": "Yusuf Demir",
+      "department": "Security, Risk & Compliance",
+      "region": "Global",
+      "role": "Practitioner"
+    },
+    "category": "Approval workflow",
+    "pain_type": "approval",
+    "difficulty": "Medium",
+    "confidentiality": "Internal",
+    "upvotes": 4,
+    "comments": 0,
+    "urgency": 5.5,
+    "impact_score": 7.0,
+    "similar_agents": [],
+    "created_at": "2026-08-12T07:38:18.661821+00:00",
+    "twin_context": {
+      "business_unit": "Security, Risk & Compliance",
+      "task": "Sign off control",
+      "input": "Control exception register",
+      "input_from": "Control exception register",
+      "flow_edge": "",
+      "flow_object": "",
+      "output_to": "Service Delivery",
+      "output_flow": ""
+    },
+    "baseline": {
+      "steps": 16,
+      "minutes_per_task": 70.0,
+      "frequency": 14.0,
+      "frequency_unit": "per month",
+      "who_affected": "Our customers",
+      "reach_multiplier": 2.2,
+      "tasks_per_year": 168.0,
+      "tasks_per_month": 14.0,
+      "monthly_hours": 16.3,
+      "annual_hours": 196.0,
+      "annual_hours_at_half": 98.0,
+      "pain_score": 56,
+      "level": "MODERATE",
+      "level_class": "moderate"
+    },
+    "opportunity": {
+      "impact": 70,
+      "complexity": 45,
+      "readiness": 75,
+      "score": 68,
+      "classification": "NEEDS RESEARCH",
+      "time_to_first_value": "4-6 weeks",
+      "projected_annual_hours_saved": 156.8,
+      "reusable_agents": []
+    },
+    "outcomes": [
+      "compliance",
+      "fewer_steps"
+    ],
+    "current_workflow": [
+      "Pull the open exception register",
+      "Identify the owning team for each exception",
+      "Request sign-off and chase it",
+      "Record the authorisation and its expiry",
+      "Assemble the pack for the auditor"
+    ],
+    "workflow_source": "sample",
+    "metrics": [
+      {
+        "key": "steps_per_task",
+        "label": "Steps / task",
+        "icon": "👣",
+        "unit": "steps",
+        "group": "human",
+        "better": "lower",
+        "before": "16",
+        "target": "<6",
+        "actual": "—"
+      },
+      {
+        "key": "compliance_rate",
+        "label": "Compliance rate",
+        "icon": "📋",
+        "unit": "%",
+        "group": "human",
+        "better": "higher",
+        "before": "—",
+        "target": "100%",
+        "actual": "—"
+      },
+      {
+        "key": "accuracy",
+        "label": "Accuracy",
+        "icon": "🎯",
+        "unit": "%",
+        "group": "human",
+        "better": "higher",
+        "before": "—",
+        "target": ">98%",
+        "actual": "—"
+      },
+      {
+        "key": "manual_interventions",
+        "label": "Manual interventions",
+        "icon": "✋",
+        "unit": "/task",
+        "group": "human",
+        "better": "lower",
+        "before": "11",
+        "target": "<3",
+        "actual": "—"
+      }
+    ]
+  },
+  {
+    "id": "sample_challenge_7",
+    "is_sample": true,
+    "title": "The account review deck is rebuilt from five dashboards",
+    "description": "Before every account review I query five dashboards for usage, tickets, invoices, adoption and open actions, then paste the metrics into a slide. The report is stale the moment it is built.",
+    "submitter": {
+      "name": "Lena Fischer",
+      "department": "Customer Success",
+      "region": "Global",
+      "role": "Practitioner"
+    },
+    "category": "Data analysis",
+    "pain_type": "analysis",
+    "difficulty": "Medium",
+    "confidentiality": "Internal",
+    "upvotes": 5,
+    "comments": 0,
+    "urgency": 5.5,
+    "impact_score": 7.5,
+    "similar_agents": [],
+    "created_at": "2026-07-30T07:38:18.661821+00:00",
+    "twin_context": {
+      "business_unit": "Customer Success",
+      "task": "Onboard customer",
+      "input": "Provisioned service",
+      "input_from": "Provisioned service",
+      "flow_edge": "success>support_case>support",
+      "flow_object": "Support Case",
+      "output_to": "Support",
+      "output_flow": "Support Case -> Resolve issue"
+    },
+    "baseline": {
+      "steps": 16,
+      "minutes_per_task": 50.0,
+      "frequency": 45.0,
+      "frequency_unit": "per month",
+      "who_affected": "My department",
+      "reach_multiplier": 1.7,
+      "tasks_per_year": 540.0,
+      "tasks_per_month": 45.0,
+      "monthly_hours": 37.5,
+      "annual_hours": 450.0,
+      "annual_hours_at_half": 225.0,
+      "pain_score": 63,
+      "level": "MODERATE",
+      "level_class": "moderate"
+    },
+    "opportunity": {
+      "impact": 75,
+      "complexity": 39,
+      "readiness": 75,
+      "score": 72,
+      "classification": "QUICK WIN",
+      "time_to_first_value": "2 weeks",
+      "projected_annual_hours_saved": 360.0,
+      "reusable_agents": []
+    },
+    "outcomes": [
+      "save_time",
+      "faster_response"
+    ],
+    "current_workflow": [
+      "Open each of the five dashboards in turn",
+      "Query the account's numbers for the period",
+      "Paste the metrics into the review template",
+      "Write the commentary from memory",
+      "Send the deck to the account team"
+    ],
+    "workflow_source": "sample",
+    "metrics": [
+      {
+        "key": "accuracy",
+        "label": "Accuracy",
+        "icon": "🎯",
+        "unit": "%",
+        "group": "human",
+        "better": "higher",
+        "before": "—",
+        "target": ">98%",
+        "actual": "—"
+      },
+      {
+        "key": "time_per_task",
+        "label": "Human time / task",
+        "icon": "⏱",
+        "unit": "min",
+        "group": "human",
+        "better": "lower",
+        "before": "50 min",
+        "target": "<10 min",
+        "actual": "—"
+      },
+      {
+        "key": "satisfaction",
+        "label": "User satisfaction",
+        "icon": "😊",
+        "unit": "/5",
+        "group": "human",
+        "better": "higher",
+        "before": "—",
+        "target": ">4/5",
+        "actual": "—"
+      }
+    ],
+    "poc": {
+      "integration": {
+        "owner": "Customer Success",
+        "task": "Onboard customer",
+        "input": "Provisioned service",
+        "input_from": "Provisioned service",
+        "output_to": "Support",
+        "handoff": "Support Case -> Resolve issue"
+      },
+      "id": "poc_the-account-review-deck-is-rebuilt-from-",
+      "name": "Query — The Account Review Deck Is Agent",
+      "pain_type": "analysis",
+      "pattern": "Query → Aggregate → Narrate → Publish",
+      "objects": [
+        "Dataset",
+        "Decision",
+        "Event"
+      ],
+      "capabilities": [
+        "Run the recurring query set without being asked",
+        "Aggregate to the grain the audience actually reads",
+        "Narrate what changed and why it plausibly changed",
+        "Publish on a schedule to where people already look"
+      ],
+      "tools": [
+        "Warehouse credentials",
+        "Query library",
+        "Chart renderer",
+        "Delivery channel"
+      ],
+      "guardrail": "Every number carries the query and the run time that produced it.",
+      "sector": "Analytics",
+      "industry": "📊 Data Analysis",
+      "build_steps": [
+        "Query: Open each of the five dashboards in turn",
+        "Aggregate: Query the account's numbers for the period",
+        "Narrate: Paste the metrics into the review template",
+        "Publish: Write the commentary from memory; Send the deck to the account team"
+      ],
+      "acceptance": [
+        {
+          "key": "accuracy",
+          "label": "Accuracy",
+          "unit": "%",
+          "before": "—",
+          "target": ">98%",
+          "actual": "—",
+          "better": "higher",
+          "met": true
+        },
+        {
+          "key": "time_per_task",
+          "label": "Human time / task",
+          "unit": "min",
+          "before": "50 min",
+          "target": "<10 min",
+          "actual": "—",
+          "better": "lower",
+          "met": false
+        },
+        {
+          "key": "satisfaction",
+          "label": "User satisfaction",
+          "unit": "/5",
+          "before": "—",
+          "target": ">4/5",
+          "actual": "—",
+          "better": "higher",
+          "met": false
+        },
+        {
+          "key": "human_review",
+          "label": "Human review path works",
+          "unit": "",
+          "before": null,
+          "target": "verified",
+          "actual": null,
+          "better": "higher",
+          "met": false
+        },
+        {
+          "key": "handoff_accepted",
+          "label": "Output accepted by Support",
+          "unit": "",
+          "before": null,
+          "target": "accepted",
+          "actual": null,
+          "better": "higher",
+          "met": false
+        }
+      ],
+      "effort_days": 5,
+      "reuse": [],
+      "github": "yesaican/the-account-review-deck-is-rebuilt-from-",
+      "platform": "",
+      "demo_url": "",
+      "owner": "Diego Santos",
+      "notes": "",
+      "status": "Building",
+      "created_at": "2026-08-18T07:38:18.666768+00:00"
+    }
+  },
+  {
+    "id": "sample_challenge_8",
+    "is_sample": true,
+    "title": "Delivery status is a query across four trackers",
+    "description": "'Where is this deployment' means opening four trackers and reading them against each other. Building the weekly delivery report is an analyst job that produces a metric nobody can drill into afterwards.",
+    "submitter": {
+      "name": "Kofi Mensah",
+      "department": "Service Delivery",
+      "region": "Global",
+      "role": "Practitioner"
+    },
+    "category": "Data analysis",
+    "pain_type": "analysis",
+    "difficulty": "Medium",
+    "confidentiality": "Internal",
+    "upvotes": 3,
+    "comments": 0,
+    "urgency": 5.5,
+    "impact_score": 6.6,
+    "similar_agents": [],
+    "created_at": "2026-07-26T07:38:18.661821+00:00",
+    "twin_context": {
+      "business_unit": "Service Delivery",
+      "task": "Provision service",
+      "input": "Signed contract",
+      "input_from": "Signed contract",
+      "flow_edge": "service_delivery>provisioned_service>success",
+      "flow_object": "Provisioned Service",
+      "output_to": "Customer Success",
+      "output_flow": "Provisioned Service -> Onboard customer"
+    },
+    "baseline": {
+      "steps": 22,
+      "minutes_per_task": 40.0,
+      "frequency": 35.0,
+      "frequency_unit": "per month",
+      "who_affected": "My team",
+      "reach_multiplier": 1.35,
+      "tasks_per_year": 420.0,
+      "tasks_per_month": 35.0,
+      "monthly_hours": 23.3,
+      "annual_hours": 280.0,
+      "annual_hours_at_half": 140.0,
+      "pain_score": 57,
+      "level": "MODERATE",
+      "level_class": "moderate"
+    },
+    "opportunity": {
+      "impact": 66,
+      "complexity": 40,
+      "readiness": 75,
+      "score": 68,
+      "classification": "FILL-IN",
+      "time_to_first_value": "2 weeks",
+      "projected_annual_hours_saved": 224.0,
+      "reusable_agents": []
+    },
+    "outcomes": [
+      "fewer_steps",
+      "improve_quality"
+    ],
+    "current_workflow": [
+      "Open each delivery tracker",
+      "Reconcile the four views of the same deployment",
+      "Build the weekly status report",
+      "Circulate it and answer the follow-up questions",
+      "Hand the account over to Customer Success"
+    ],
+    "workflow_source": "sample",
+    "metrics": [
+      {
+        "key": "accuracy",
+        "label": "Accuracy",
+        "icon": "🎯",
+        "unit": "%",
+        "group": "human",
+        "better": "higher",
+        "before": "—",
+        "target": ">98%",
+        "actual": "—"
+      },
+      {
+        "key": "steps_per_task",
+        "label": "Steps / task",
+        "icon": "👣",
+        "unit": "steps",
+        "group": "human",
+        "better": "lower",
+        "before": "22",
+        "target": "<8",
+        "actual": "—"
+      },
+      {
+        "key": "manual_interventions",
+        "label": "Manual interventions",
+        "icon": "✋",
+        "unit": "/task",
+        "group": "human",
+        "better": "lower",
+        "before": "15",
+        "target": "<4",
+        "actual": "—"
+      },
+      {
+        "key": "rework_rate",
+        "label": "Rework rate",
+        "icon": "🔄",
+        "unit": "%",
+        "group": "human",
+        "better": "lower",
+        "before": "—",
+        "target": "<2%",
+        "actual": "—"
+      }
+    ],
+    "poc": {
+      "integration": {
+        "owner": "Service Delivery",
+        "task": "Provision service",
+        "input": "Signed contract",
+        "input_from": "Signed contract",
+        "output_to": "Customer Success",
+        "handoff": "Provisioned Service -> Onboard customer"
+      },
+      "id": "poc_delivery-status-is-a-query-across-four-t",
+      "name": "Query — Delivery Status Is A Query Agent",
+      "pain_type": "analysis",
+      "pattern": "Query → Aggregate → Narrate → Publish",
+      "objects": [
+        "Dataset",
+        "Decision",
+        "Event"
+      ],
+      "capabilities": [
+        "Run the recurring query set without being asked",
+        "Aggregate to the grain the audience actually reads",
+        "Narrate what changed and why it plausibly changed",
+        "Publish on a schedule to where people already look"
+      ],
+      "tools": [
+        "Warehouse credentials",
+        "Query library",
+        "Chart renderer",
+        "Delivery channel"
+      ],
+      "guardrail": "Every number carries the query and the run time that produced it.",
+      "sector": "Analytics",
+      "industry": "📊 Data Analysis",
+      "build_steps": [
+        "Query: Open each delivery tracker",
+        "Aggregate: Reconcile the four views of the same deployment",
+        "Narrate: Build the weekly status report",
+        "Publish: Circulate it and answer the follow-up questions; Hand the account over to Customer Success"
+      ],
+      "acceptance": [
+        {
+          "key": "accuracy",
+          "label": "Accuracy",
+          "unit": "%",
+          "before": "—",
+          "target": ">98%",
+          "actual": "—",
+          "better": "higher",
+          "met": true
+        },
+        {
+          "key": "steps_per_task",
+          "label": "Steps / task",
+          "unit": "steps",
+          "before": "22",
+          "target": "<8",
+          "actual": "—",
+          "better": "lower",
+          "met": false
+        },
+        {
+          "key": "manual_interventions",
+          "label": "Manual interventions",
+          "unit": "/task",
+          "before": "15",
+          "target": "<4",
+          "actual": "—",
+          "better": "lower",
+          "met": false
+        },
+        {
+          "key": "rework_rate",
+          "label": "Rework rate",
+          "unit": "%",
+          "before": "—",
+          "target": "<2%",
+          "actual": "—",
+          "better": "lower",
+          "met": false
+        },
+        {
+          "key": "human_review",
+          "label": "Human review path works",
+          "unit": "",
+          "before": null,
+          "target": "verified",
+          "actual": null,
+          "better": "higher",
+          "met": false
+        },
+        {
+          "key": "handoff_accepted",
+          "label": "Output accepted by Customer Success",
+          "unit": "",
+          "before": null,
+          "target": "accepted",
+          "actual": null,
+          "better": "higher",
+          "met": false
+        }
+      ],
+      "effort_days": 5,
+      "reuse": [],
+      "github": "yesaican/delivery-status-is-a-query-across-four-t",
+      "platform": "",
+      "demo_url": "",
+      "owner": "Sofia Rossi",
+      "notes": "",
+      "status": "Building",
+      "created_at": "2026-08-18T07:38:18.666897+00:00"
+    }
+  },
+  {
+    "id": "sample_challenge_9",
+    "is_sample": true,
+    "title": "Roadmap themes are tallied by hand once a quarter",
+    "description": "Every quarter an analyst reads through the feedback backlog and tallies the themes in a spreadsheet to produce the roadmap report. By the time the analysis lands, the quarter it describes is over.",
+    "submitter": {
+      "name": "Sofia Rossi",
+      "department": "Product",
+      "region": "Global",
+      "role": "Practitioner"
+    },
+    "category": "Data analysis",
+    "pain_type": "analysis",
+    "difficulty": "Medium",
+    "confidentiality": "Internal",
+    "upvotes": 6,
+    "comments": 0,
+    "urgency": 3.0,
+    "impact_score": 5.9,
+    "similar_agents": [],
+    "created_at": "2026-08-07T07:38:18.661821+00:00",
+    "twin_context": {
+      "business_unit": "Product",
+      "task": "Prioritize improvement",
+      "input": "Customer feedback",
+      "input_from": "Customer feedback",
+      "flow_edge": "",
+      "flow_object": "",
+      "output_to": "Marketing",
+      "output_flow": ""
+    },
+    "baseline": {
+      "steps": 26,
+      "minutes_per_task": 120.0,
+      "frequency": 4.0,
+      "frequency_unit": "per month",
+      "who_affected": "My department",
+      "reach_multiplier": 1.7,
+      "tasks_per_year": 48.0,
+      "tasks_per_month": 4.0,
+      "monthly_hours": 8.0,
+      "annual_hours": 96.0,
+      "annual_hours_at_half": 48.0,
+      "pain_score": 48,
+      "level": "LOW",
+      "level_class": "low"
+    },
+    "opportunity": {
+      "impact": 59,
+      "complexity": 40,
+      "readiness": 65,
+      "score": 61,
+      "classification": "FILL-IN",
+      "time_to_first_value": "2 weeks",
+      "projected_annual_hours_saved": 76.8,
+      "reusable_agents": []
+    },
+    "outcomes": [
+      "save_time",
+      "improve_quality"
+    ],
+    "current_workflow": [
+      "Export the quarter's feedback backlog",
+      "Read every item and label it by hand",
+      "Tally the labels in a spreadsheet",
+      "Write the roadmap report from the tallies",
+      "Present it and hand the themes to Marketing"
+    ],
+    "workflow_source": "sample",
+    "metrics": [
+      {
+        "key": "accuracy",
+        "label": "Accuracy",
+        "icon": "🎯",
+        "unit": "%",
+        "group": "human",
+        "better": "higher",
+        "before": "—",
+        "target": ">98%",
+        "actual": "—"
+      },
+      {
+        "key": "time_per_task",
+        "label": "Human time / task",
+        "icon": "⏱",
+        "unit": "min",
+        "group": "human",
+        "better": "lower",
+        "before": "120 min",
+        "target": "<24 min",
+        "actual": "—"
+      },
+      {
+        "key": "rework_rate",
+        "label": "Rework rate",
+        "icon": "🔄",
+        "unit": "%",
+        "group": "human",
+        "better": "lower",
+        "before": "—",
+        "target": "<2%",
+        "actual": "—"
+      }
+    ]
+  },
+  {
+    "id": "sample_challenge_10",
+    "is_sample": true,
+    "title": "The same twenty tickets get triaged from scratch every week",
+    "description": "The same known issues arrive as support tickets week after week, and each one is triaged from the beginning - read the complaint, reproduce it, search whether we have seen it before, then escalate. The SLA clock runs the whole time.",
+    "submitter": {
+      "name": "Diego Santos",
+      "department": "Support",
+      "region": "Global",
+      "role": "Practitioner"
+    },
+    "category": "Customer support",
+    "pain_type": "support",
+    "difficulty": "Easy",
+    "confidentiality": "Internal",
+    "upvotes": 11,
+    "comments": 0,
+    "urgency": 7.5,
+    "impact_score": 9.5,
+    "similar_agents": [],
+    "created_at": "2026-08-14T07:38:18.661821+00:00",
+    "twin_context": {
+      "business_unit": "Support",
+      "task": "Resolve issue",
+      "input": "Support cases",
+      "input_from": "Support cases",
+      "flow_edge": "support>feedback>product",
+      "flow_object": "Customer Feedback",
+      "output_to": "Product",
+      "output_flow": "Customer Feedback -> Prioritize improvement"
+    },
+    "baseline": {
+      "steps": 8,
+      "minutes_per_task": 25.0,
+      "frequency": 400.0,
+      "frequency_unit": "per month",
+      "who_affected": "Our customers",
+      "reach_multiplier": 2.2,
+      "tasks_per_year": 4800.0,
+      "tasks_per_month": 400.0,
+      "monthly_hours": 166.7,
+      "annual_hours": 2000.0,
+      "annual_hours_at_half": 1000.0,
+      "pain_score": 80,
+      "level": "HIGH",
+      "level_class": "high"
+    },
+    "opportunity": {
+      "impact": 95,
+      "complexity": 27,
+      "readiness": 75,
+      "score": 85,
+      "classification": "QUICK WIN",
+      "time_to_first_value": "2 weeks",
+      "projected_annual_hours_saved": 1600.0,
+      "reusable_agents": []
+    },
+    "outcomes": [
+      "faster_response",
+      "avoid_repetition"
+    ],
+    "current_workflow": [
+      "Read the incoming ticket",
+      "Try to reproduce the reported behaviour",
+      "Search past tickets for the same symptom",
+      "Escalate if no known resolution is found",
+      "Reply to the customer and close"
+    ],
+    "workflow_source": "sample",
+    "metrics": [
+      {
+        "key": "escalation_rate",
+        "label": "Escalation rate",
+        "icon": "⬆️",
+        "unit": "%",
+        "group": "human",
+        "better": "lower",
+        "before": "—",
+        "target": "<10%",
+        "actual": "—"
+      },
+      {
+        "key": "satisfaction",
+        "label": "User satisfaction",
+        "icon": "😊",
+        "unit": "/5",
+        "group": "human",
+        "better": "higher",
+        "before": "—",
+        "target": ">4/5",
+        "actual": "—"
+      },
+      {
+        "key": "manual_interventions",
+        "label": "Manual interventions",
+        "icon": "✋",
+        "unit": "/task",
+        "group": "human",
+        "better": "lower",
+        "before": "6",
+        "target": "<2",
+        "actual": "—"
+      },
+      {
+        "key": "automation_rate",
+        "label": "Automation rate",
+        "icon": "🤖",
+        "unit": "%",
+        "group": "human",
+        "better": "higher",
+        "before": "—",
+        "target": ">70%",
+        "actual": "—"
+      }
+    ]
+  },
+  {
+    "id": "sample_challenge_11",
+    "is_sample": true,
+    "title": "Datacentre asset forms are retyped into the CMDB",
+    "description": "Hardware arrives with a printed asset form. Someone scans it, reads off the serial, rack position, model and support dates, and retypes all of it into the CMDB. A single mistyped serial makes the record unfindable later.",
+    "submitter": {
+      "name": "Tobias Krause",
+      "department": "Operations / Cloud Services",
+      "region": "Global",
+      "role": "Practitioner"
+    },
+    "category": "Document processing",
+    "pain_type": "document",
+    "difficulty": "Easy",
+    "confidentiality": "Internal",
+    "upvotes": 5,
+    "comments": 0,
+    "urgency": 7.5,
+    "impact_score": 7.5,
+    "similar_agents": [],
+    "created_at": "2026-08-09T07:38:18.661821+00:00",
+    "twin_context": {
+      "business_unit": "Operations / Cloud Services",
+      "task": "Record asset",
+      "input": "Asset handover form (PDF)",
+      "input_from": "Asset handover form (PDF)",
+      "flow_edge": "",
+      "flow_object": "",
+      "output_to": "Service Delivery",
+      "output_flow": ""
+    },
+    "baseline": {
+      "steps": 10,
+      "minutes_per_task": 30.0,
+      "frequency": 120.0,
+      "frequency_unit": "per month",
+      "who_affected": "My team",
+      "reach_multiplier": 1.35,
+      "tasks_per_year": 1440.0,
+      "tasks_per_month": 120.0,
+      "monthly_hours": 60.0,
+      "annual_hours": 720.0,
+      "annual_hours_at_half": 360.0,
+      "pain_score": 67,
+      "level": "HIGH",
+      "level_class": "high"
+    },
+    "opportunity": {
+      "impact": 75,
+      "complexity": 30,
+      "readiness": 75,
+      "score": 74,
+      "classification": "QUICK WIN",
+      "time_to_first_value": "2 weeks",
+      "projected_annual_hours_saved": 576.0,
+      "reusable_agents": []
+    },
+    "outcomes": [
+      "save_time",
+      "reduce_errors"
+    ],
+    "current_workflow": [
+      "Scan the printed asset handover form",
+      "Read off serial, rack position, model and support dates",
+      "Retype each field into the CMDB",
+      "Re-check the serial against the document",
+      "File the scan against the asset record"
+    ],
+    "workflow_source": "sample",
+    "metrics": [
+      {
+        "key": "time_per_task",
+        "label": "Human time / task",
+        "icon": "⏱",
+        "unit": "min",
+        "group": "human",
+        "better": "lower",
+        "before": "30 min",
+        "target": "<6 min",
+        "actual": "—"
+      },
+      {
+        "key": "accuracy",
+        "label": "Accuracy",
+        "icon": "🎯",
+        "unit": "%",
+        "group": "human",
+        "better": "higher",
+        "before": "—",
+        "target": ">98%",
+        "actual": "—"
+      },
+      {
+        "key": "extraction_accuracy",
+        "label": "Extraction accuracy",
+        "icon": "🔍",
+        "unit": "%",
+        "group": "human",
+        "better": "higher",
+        "before": "—",
+        "target": ">97%",
+        "actual": "—"
+      },
+      {
+        "key": "error_rate",
+        "label": "Error rate",
+        "icon": "⚠️",
+        "unit": "%",
+        "group": "human",
+        "better": "lower",
+        "before": "—",
+        "target": "<2%",
+        "actual": "—"
+      },
+      {
+        "key": "rework_rate",
+        "label": "Rework rate",
+        "icon": "🔄",
+        "unit": "%",
+        "group": "human",
+        "better": "lower",
+        "before": "—",
+        "target": "<2%",
+        "actual": "—"
+      }
+    ]
+  },
+  {
+    "id": "sample_challenge_12",
+    "is_sample": true,
+    "title": "Supplier warranty documents are retyped into the asset register",
+    "description": "Each supplier sends warranty certificates as scanned PDF attachments. I read the cover dates, entitlement level and contract reference off the document and retype them into the asset register so renewals can be tracked.",
+    "submitter": {
+      "name": "Ravi Patel",
+      "department": "Engineering & Delivery",
+      "region": "Global",
+      "role": "Practitioner"
+    },
+    "category": "Document processing",
+    "pain_type": "document",
+    "difficulty": "Medium",
+    "confidentiality": "Internal",
+    "upvotes": 4,
+    "comments": 0,
+    "urgency": 5.5,
+    "impact_score": 7.1,
+    "similar_agents": [],
+    "created_at": "2026-08-11T07:38:18.661821+00:00",
+    "twin_context": {
+      "business_unit": "Engineering & Delivery",
+      "task": "Record warranty",
+      "input": "Warranty certificate (PDF)",
+      "input_from": "Warranty certificate (PDF)",
+      "flow_edge": "",
+      "flow_object": "",
+      "output_to": "Finance",
+      "output_flow": ""
+    },
+    "baseline": {
+      "steps": 11,
+      "minutes_per_task": 28.0,
+      "frequency": 80.0,
+      "frequency_unit": "per month",
+      "who_affected": "My team",
+      "reach_multiplier": 1.35,
+      "tasks_per_year": 960.0,
+      "tasks_per_month": 80.0,
+      "monthly_hours": 37.3,
+      "annual_hours": 448.0,
+      "annual_hours_at_half": 224.0,
+      "pain_score": 62,
+      "level": "MODERATE",
+      "level_class": "moderate"
+    },
+    "opportunity": {
+      "impact": 71,
+      "complexity": 32,
+      "readiness": 75,
+      "score": 71,
+      "classification": "QUICK WIN",
+      "time_to_first_value": "2 weeks",
+      "projected_annual_hours_saved": 358.4,
+      "reusable_agents": []
+    },
+    "outcomes": [
+      "save_time",
+      "reduce_errors"
+    ],
+    "current_workflow": [
+      "Open the warranty certificate attachment",
+      "Read off cover dates, entitlement level and contract reference",
+      "Retype the fields into the asset register",
+      "Check the reference against the supplier's document",
+      "Attach the scan to the register entry"
+    ],
+    "workflow_source": "sample",
+    "metrics": [
+      {
+        "key": "time_per_task",
+        "label": "Human time / task",
+        "icon": "⏱",
+        "unit": "min",
+        "group": "human",
+        "better": "lower",
+        "before": "28 min",
+        "target": "<6 min",
+        "actual": "—"
+      },
+      {
+        "key": "accuracy",
+        "label": "Accuracy",
+        "icon": "🎯",
+        "unit": "%",
+        "group": "human",
+        "better": "higher",
+        "before": "—",
+        "target": ">98%",
+        "actual": "—"
+      },
+      {
+        "key": "extraction_accuracy",
+        "label": "Extraction accuracy",
+        "icon": "🔍",
+        "unit": "%",
+        "group": "human",
+        "better": "higher",
+        "before": "—",
+        "target": ">97%",
+        "actual": "—"
+      },
+      {
+        "key": "error_rate",
+        "label": "Error rate",
+        "icon": "⚠️",
+        "unit": "%",
+        "group": "human",
+        "better": "lower",
+        "before": "—",
+        "target": "<2%",
+        "actual": "—"
+      },
+      {
+        "key": "rework_rate",
+        "label": "Rework rate",
+        "icon": "🔄",
+        "unit": "%",
+        "group": "human",
+        "better": "lower",
+        "before": "—",
+        "target": "<2%",
+        "actual": "—"
+      }
+    ]
+  },
+  {
+    "id": "sample_challenge_13",
+    "is_sample": true,
+    "title": "Partner spec sheets are retyped into the product catalogue",
+    "description": "Partners send product spec sheets as PDF documents. To list anything I read off the model names, capabilities and support tiers and retype them into the catalogue, then re-read the sheet to check nothing was missed.",
+    "submitter": {
+      "name": "Hana Sato",
+      "department": "Product & Solutions",
+      "region": "Global",
+      "role": "Practitioner"
+    },
+    "category": "Document processing",
+    "pain_type": "document",
+    "difficulty": "Medium",
+    "confidentiality": "Internal",
+    "upvotes": 3,
+    "comments": 0,
+    "urgency": 5.5,
+    "impact_score": 7.3,
+    "similar_agents": [],
+    "created_at": "2026-08-13T07:38:18.661821+00:00",
+    "twin_context": {
+      "business_unit": "Product & Solutions",
+      "task": "List product",
+      "input": "Partner spec sheet (PDF)",
+      "input_from": "Partner spec sheet (PDF)",
+      "flow_edge": "",
+      "flow_object": "",
+      "output_to": "Marketing",
+      "output_flow": ""
+    },
+    "baseline": {
+      "steps": 13,
+      "minutes_per_task": 42.0,
+      "frequency": 45.0,
+      "frequency_unit": "per month",
+      "who_affected": "My department",
+      "reach_multiplier": 1.7,
+      "tasks_per_year": 540.0,
+      "tasks_per_month": 45.0,
+      "monthly_hours": 31.5,
+      "annual_hours": 378.0,
+      "annual_hours_at_half": 189.0,
+      "pain_score": 61,
+      "level": "MODERATE",
+      "level_class": "moderate"
+    },
+    "opportunity": {
+      "impact": 73,
+      "complexity": 34,
+      "readiness": 75,
+      "score": 72,
+      "classification": "QUICK WIN",
+      "time_to_first_value": "2 weeks",
+      "projected_annual_hours_saved": 302.4,
+      "reusable_agents": []
+    },
+    "outcomes": [
+      "save_time",
+      "reduce_errors",
+      "improve_quality"
+    ],
+    "current_workflow": [
+      "Open the partner spec sheet",
+      "Read off model names, capabilities and support tiers",
+      "Retype each entry into the product catalogue",
+      "Re-read the sheet to check nothing was missed",
+      "Publish the catalogue entry"
+    ],
+    "workflow_source": "sample",
+    "metrics": [
+      {
+        "key": "time_per_task",
+        "label": "Human time / task",
+        "icon": "⏱",
+        "unit": "min",
+        "group": "human",
+        "better": "lower",
+        "before": "42 min",
+        "target": "<8 min",
+        "actual": "—"
+      },
+      {
+        "key": "accuracy",
+        "label": "Accuracy",
+        "icon": "🎯",
+        "unit": "%",
+        "group": "human",
+        "better": "higher",
+        "before": "—",
+        "target": ">98%",
+        "actual": "—"
+      },
+      {
+        "key": "extraction_accuracy",
+        "label": "Extraction accuracy",
+        "icon": "🔍",
+        "unit": "%",
+        "group": "human",
+        "better": "higher",
+        "before": "—",
+        "target": ">97%",
+        "actual": "—"
+      },
+      {
+        "key": "error_rate",
+        "label": "Error rate",
+        "icon": "⚠️",
+        "unit": "%",
+        "group": "human",
+        "better": "lower",
+        "before": "—",
+        "target": "<2%",
+        "actual": "—"
+      },
+      {
+        "key": "rework_rate",
+        "label": "Rework rate",
+        "icon": "🔄",
+        "unit": "%",
+        "group": "human",
+        "better": "lower",
+        "before": "—",
+        "target": "<2%",
+        "actual": "—"
+      }
+    ]
+  },
+  {
+    "id": "challenge_1787002986",
+    "title": "Bill Length Reduction Project",
+    "description": "too long",
+    "submitter": {
+      "name": "Anonymous",
+      "department": "",
+      "region": "",
+      "role": ""
+    },
+    "attachments": [],
+    "category": "Repetitive manual work",
+    "pain_type": "repetitive",
+    "difficulty": "Medium",
+    "confidentiality": "Internal",
+    "upvotes": 0,
+    "comments": 0,
+    "urgency": 7.5,
+    "impact_score": 8.6,
+    "similar_agents": [],
+    "similar_rackers": [],
+    "similar_projects": [],
+    "created_at": "2026-08-18T04:43:06.674406",
+    "twin_context": {
+      "business_unit": "Sales",
+      "task": "Qualify opportunity",
+      "input": "Marketing",
+      "input_from": "Marketing",
+      "flow_edge": "",
+      "flow_object": "",
+      "output_to": "Product",
+      "output_flow": ""
+    },
+    "baseline": {
+      "steps": 14,
+      "minutes_per_task": 45.0,
+      "frequency": 250.0,
+      "frequency_unit": "per month",
+      "who_affected": "My team",
+      "reach_multiplier": 1.35,
+      "tasks_per_year": 3000.0,
+      "tasks_per_month": 250.0,
+      "monthly_hours": 187.5,
+      "annual_hours": 2250.0,
+      "annual_hours_at_half": 1125.0,
+      "pain_score": 78,
+      "level": "HIGH",
+      "level_class": "high"
+    },
+    "opportunity": {
+      "impact": 86,
+      "complexity": 36,
+      "readiness": 75,
+      "score": 78,
+      "classification": "QUICK WIN",
+      "time_to_first_value": "2 weeks",
+      "projected_annual_hours_saved": 1800.0,
+      "reusable_agents": []
+    },
+    "outcomes": [
+      "save_time",
+      "fewer_steps",
+      "reduce_errors"
+    ],
+    "current_workflow": [
+      "Acknowledge task length",
+      "Identify main components",
+      "Break down into subtasks",
+      "Create a checklist of tasks",
+      "Ensure each step is clear and concise",
+      "Limit steps to no more than eight words per instruction",
+      "Verify that there are exactly fourteen instructions in total",
+      "Review for logical flow between the steps",
+      "Finalize list of imperative short-steps",
+      "Ensure each step is actionable and specific",
+      "Additional manual step 11",
+      "Additional manual step 12",
+      "Additional manual step 13",
+      "Additional manual step 14"
+    ],
+    "workflow_source": "typed",
+    "metrics": [
+      {
+        "key": "time_per_task",
+        "label": "Human time / task",
+        "icon": "⏱",
+        "unit": "min",
+        "group": "human",
+        "better": "lower",
+        "before": "45 min",
+        "target": "<9 min",
+        "actual": "—"
+      },
+      {
+        "key": "steps_per_task",
+        "label": "Steps / task",
+        "icon": "👣",
+        "unit": "steps",
+        "group": "human",
+        "better": "lower",
+        "before": "14",
+        "target": "<5",
+        "actual": "—"
+      },
+      {
+        "key": "manual_interventions",
+        "label": "Manual interventions",
+        "icon": "✋",
+        "unit": "/task",
+        "group": "human",
+        "better": "lower",
+        "before": "10",
+        "target": "<3",
+        "actual": "—"
+      },
+      {
+        "key": "error_rate",
+        "label": "Error rate",
+        "icon": "⚠️",
+        "unit": "%",
+        "group": "human",
+        "better": "lower",
+        "before": "—",
+        "target": "<2%",
+        "actual": "—"
+      },
+      {
+        "key": "rework_rate",
+        "label": "Rework rate",
+        "icon": "🔄",
+        "unit": "%",
+        "group": "human",
+        "better": "lower",
+        "before": "—",
+        "target": "<2%",
+        "actual": "—"
+      }
+    ],
+    "ai_baseline": {
+      "summary": "Develop an automated system to process and summarize bills, reducing their length without losing essential information.",
+      "workflow": [
+        "Identify common phrases used in bill descriptions that can be condensed or replaced with standardized terms",
+        "Create a natural language processing model trained on the identified patterns for text simplification",
+        "Test and refine the NLP model using sample bills to ensure accuracy of summaries generated",
+        "Deploy the system in a controlled environment, monitor its performance, and collect feedback from users"
+      ],
+      "required_data": [
+        "Sample bill documents with varying lengths and complexities for training data",
+        "Feedback forms or surveys to gather user experience insights post-deployment"
+      ],
+      "risks": [
+        "The NLP model may not accurately capture the nuances of legal language, leading to loss of critical information in summaries.",
+        "User resistance due to unfamiliarity with automated systems or distrust in AI'decisions."
+      ],
+      "complexity": "Medium",
+      "timeline": "3 weeks",
+      "why_ai": "AI can efficiently process large volumes of text and learn from examples, making it ideal for summarizing repetitive manual tasks like bill length reduction without sacrificing accuracy or essential details.",
+      "category": "Repetitive manual work",
+      "generated_by": "llm",
+      "similar_agents": []
+    }
+  },
+  {
     "id": "challenge_1764549627",
     "title": "custom billing",
     "description": "create a  system that can customize our billing format and timeline to customers own format and timeline ",

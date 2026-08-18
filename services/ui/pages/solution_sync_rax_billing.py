@@ -22,12 +22,12 @@ st.markdown(
 ---
 
 ### 1. Problem in One Line
-“Transform any Rackspace billing export into each customer’s bespoke invoice template with audit-grade accuracy.”
+“Transform any our Community billing export into each customer’s bespoke invoice template with audit-grade accuracy.”
 
 ---
 
 ### 2. Proposed AI Approach
-- Detect schemas for both Rackspace exports and customer templates.
+- Detect schemas for both our Community exports and customer templates.
 - Use fuzzy matching + LLM hints to propose `source → target` mappings with confidence.
 - Apply deterministic transforms (math, date formats, grouping) via a reusable pipeline.
 - Validate totals and log every transformation for audit trail.
@@ -35,7 +35,7 @@ st.markdown(
 ---
 
 ### 3. Data & Signals
-- Rackspace billing CSV/XLSX per month.
+- our Community billing CSV/XLSX per month.
 - Customer invoice template, constraints, and contractual rules.
 - Optional history of previously approved mappings for reinforcement.
 - Signals: column name similarity, value patterns, reconciliation deltas.
@@ -61,7 +61,7 @@ st.markdown(
 ### 6. Risks & Guardrails
 - Mis-mapped financial fields → require human approval + diff viewer.
 - Silent row drops → block run if variance > threshold and surface exception files.
-- Data residency → keep all processing in approved Rackspace infra; no external LLM.
+- Data residency → keep all processing in approved our Community infra; no external LLM.
 
 ---
 

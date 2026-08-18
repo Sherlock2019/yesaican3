@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV="${ROOT}/.venv"
 LOGDIR="${ROOT}/.logs"
 APIPORT="${APIPORT:-8100}"
-UIPORT="${UIPORT:-8504}"
+UIPORT="${UIPORT:-8520}"
 OLLAMA_HOST="${OLLAMA_HOST:-http://127.0.0.1:11434}"
 OLLAMA_MODEL="${OLLAMA_MODEL:-gemma2:9b}"
 export SANDBOX_CHATBOT_MODEL="${SANDBOX_CHATBOT_MODEL:-${OLLAMA_MODEL}}"
@@ -19,9 +19,35 @@ mkdir -p "$LOGDIR" \
 # 🧹 PRE-CLEANUP — Kill old processes on used ports
 # ─────────────────────────────────────────────
 echo "🧹 Checking for existing processes on ports ${APIPORT} and ${UIPORT}..."
-sudo fuser -k "${APIPORT}/tcp" 2>/dev/null || true
-sudo fuser -k "${UIPORT}/tcp" 2>/dev/null || true
-sleep 1
+
+# Never use bare `sudo` here. It prompts for a password, and with no terminal
+# attached (CI, nohup, an SSH command, a wrapper script) the prompt has nothing
+# to read from, so the whole launch hangs forever at this line with no output.
+# Our own services run as the current user, so a plain kill is enough; `sudo -n`
+# is only a fallback and fails immediately rather than blocking.
+free_port() {
+  local port="$1" pids pid
+  # `|| true` matters: the script runs under `set -euo pipefail`, and grep
+  # exits 1 when a port is simply free — the common case. Without it, a clean
+  # start aborts here with no message at all.
+  pids=$(ss -ltnp 2>/dev/null | grep ":${port} " | grep -oE 'pid=[0-9]+' | cut -d= -f2 | sort -u || true)
+  if [ -z "${pids}" ]; then
+    return 0
+  fi
+  for pid in ${pids}; do
+    if kill "${pid}" 2>/dev/null; then
+      echo "   freed port ${port} (pid ${pid})"
+    elif sudo -n kill "${pid}" 2>/dev/null; then
+      echo "   freed port ${port} (pid ${pid}, via sudo)"
+    else
+      echo "   ⚠ port ${port} is held by pid ${pid} and could not be freed"
+    fi
+  done
+  sleep 1
+}
+
+free_port "${APIPORT}"
+free_port "${UIPORT}"
 echo "✅ Old processes cleaned up."
 
 # ─────────────────────────────────────────────
@@ -194,18 +220,73 @@ echo "----------------------------------------------------"
 # Health checks
 # ─────────────────────────────────────────────
 color_echo blue "🔎 Verifying service health..."
-API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${APIPORT}/v1/health" || true)
+
+# Poll rather than checking once: uvicorn --reload and Streamlit both take a
+# few seconds to bind, so a single immediate curl reports a healthy service as
+# failed (status 000) and sends people to read a log with nothing wrong in it.
+wait_for_http() {
+  local url="$1" tries="${2:-20}" status=""
+  for ((i = 0; i < tries; i++)); do
+    status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 "${url}" || true)
+    [[ "${status}" == "200" ]] && { echo "200"; return 0; }
+    sleep 1
+  done
+  echo "${status:-000}"
+  return 1
+}
+
+# The API serves /health (services/api/main.py). The old check hit /v1/health,
+# which has never existed, so this step always reported failure.
+API_STATUS=$(wait_for_http "http://localhost:${APIPORT}/health" 20)
 if [[ "${API_STATUS}" == "200" ]]; then
   color_echo green "API OK (HTTP 200) → http://localhost:${APIPORT}  (docs: http://localhost:${APIPORT}/docs)"
 else
   color_echo red "API health check failed (status=${API_STATUS:-unreachable}) — check ${API_LOG}"
 fi
 
-UI_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${UIPORT}" || true)
+# ─────────────────────────────────────────────
+# Open the UI in a browser
+# ─────────────────────────────────────────────
+# Only called once the UI answers 200 — opening earlier lands on a connection
+# error and people assume the launch failed. Every branch is `|| true`: a
+# headless box has no browser, and failing to open one is not a failed start.
+# Set NO_BROWSER=1 to skip (CI, SSH, a server you only want the ports on).
+open_browser() {
+  local url="$1"
+
+  if [[ -n "${NO_BROWSER:-}" ]]; then
+    color_echo yellow "↷ NO_BROWSER set — not opening ${url}"
+    return 0
+  fi
+
+  # wslview first: on WSL, xdg-open exists but hands the URL to a Linux
+  # browser that usually is not installed, so it fails silently and nothing
+  # appears. wslview goes to the Windows default browser instead.
+  if command -v wslview >/dev/null 2>&1; then
+    wslview "${url}" >/dev/null 2>&1 || true
+  elif grep -qi microsoft /proc/version 2>/dev/null && command -v powershell.exe >/dev/null 2>&1; then
+    powershell.exe -NoProfile -Command "Start-Process '${url}'" >/dev/null 2>&1 || true
+  elif command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "${url}" >/dev/null 2>&1 || true
+  elif command -v open >/dev/null 2>&1; then
+    open "${url}" >/dev/null 2>&1 || true
+  else
+    color_echo yellow "↷ No browser opener found — open ${url} yourself"
+    return 0
+  fi
+
+  color_echo green "🌐 Opened ${url} in your browser"
+}
+
+UI_STATUS=$(wait_for_http "http://localhost:${UIPORT}" 30)
 if [[ "${UI_STATUS}" == "200" ]]; then
   color_echo green "UI OK (HTTP 200) → http://localhost:${UIPORT}"
+  open_browser "http://localhost:${UIPORT}"
 else
-  color_echo yellow "UI check returned ${UI_STATUS:-unreachable} (Streamlit may still be starting) — monitor ${UI_LOG}"
+  color_echo red "UI check returned ${UI_STATUS:-unreachable} — check ${UI_LOG}"
+  color_echo yellow "   If it says 'failed to run command .../streamlit', the venv is missing UI"
+  color_echo yellow "   dependencies. Install them with:"
+  color_echo yellow "   ${VENV}/bin/pip install -r ${ROOT}/services/ui/requirements.txt"
 fi
 
 # ─────────────────────────────────────────────

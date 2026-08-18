@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 from typing import Dict, List, Any
+from services.ui.utils.page_template import page_chrome
 
 st.set_page_config(
     page_title="Search — YES AI CAN",
@@ -58,7 +59,7 @@ def load_all_data():
     return humans, projects, agents, patterns
 
 # Page header
-st.title("🔍 Global Search")
+page_chrome("", "Search", "One search across challenges, people, solutions and agents.")
 st.markdown("**YES AI CAN — Rackers Lab & Community**")
 st.markdown("---")
 

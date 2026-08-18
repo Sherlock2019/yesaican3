@@ -13,7 +13,7 @@ st.markdown(
     """
 ## 1. Business Problem
 
-Rackspace and key enterprise customers maintain **different billing formats** (files, fields, and delivery cadences).
+Our Community and key enterprise customers maintain **different billing formats** (files, fields, and delivery cadences).
 Billing analysts currently massage spreadsheets every month to reconcile invoices, credits, and charge types.
 This is **slow, error-prone, and difficult to audit**, especially across APAC multi-entity accounts.
 
@@ -21,7 +21,7 @@ This is **slow, error-prone, and difficult to audit**, especially across APAC mu
 
 ## 2. Desired Outcome
 
-Build an **AI-assisted billing sync agent** that can automatically map Rackspace exports to the customer's target layout,
+Build an **AI-assisted billing sync agent** that can automatically map our Community exports to the customer's target layout,
 apply deterministic transformations, and produce customer-ready files.
 Success looks like:
 
@@ -41,7 +41,7 @@ Success looks like:
 
 ## 4. Inputs & Data Sources
 
-- Rackspace billing exports (CSV/XLSX).
+- our Community billing exports (CSV/XLSX).
 - Customer-provided billing template/spec.
 - Historical mapping notes or macros.
 - Optional contract metadata (discounts, GL codes).
@@ -74,7 +74,7 @@ Success looks like:
 
 ## 8. Test / Acceptance Criteria
 
-- Given sample Rackspace export + template, generated file matches golden dataset.
+- Given sample our Community export + template, generated file matches golden dataset.
 - Analyst can run end-to-end in <15 minutes without code.
 - Detailed logs highlight unmapped fields or rejected rows.
 

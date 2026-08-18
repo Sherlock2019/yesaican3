@@ -156,6 +156,41 @@ SUPPORTING_LAYERS = [
 ]
 
 
+# --------------------------------------------------------------------------
+# Twin lookups
+# --------------------------------------------------------------------------
+# The twin already records who hands work to whom. Intake reads these instead
+# of asking a submitter to describe their downstream from scratch — the answer
+# is usually already in the model, and a pre-filled one gets corrected far more
+# often than a blank one gets filled.
+
+def business_unit_names() -> List[str]:
+    """Every business unit in the twin, in diagram order."""
+    return [unit["name"] for unit in BUSINESS_UNITS]
+
+
+def business_unit(name: str) -> Dict[str, Any] | None:
+    return next((unit for unit in BUSINESS_UNITS if unit["name"] == name), None)
+
+
+def downstream_of(name: str) -> Dict[str, Any] | None:
+    """Where this unit's work goes next, per the twin's relationship map."""
+    return next(
+        (rel for rel in RELATIONSHIPS
+         if rel["source"] == name and rel["target"] != "All units"),
+        None,
+    )
+
+
+def upstream_of(name: str) -> Dict[str, Any] | None:
+    """Who hands work to this unit."""
+    return next(
+        (rel for rel in RELATIONSHIPS
+         if rel["target"] == name and rel["source"] != "All units"),
+        None,
+    )
+
+
 def _mermaid_node_id(name: str) -> str:
     return "BU_" + "".join(ch if ch.isalnum() else "_" for ch in name)
 

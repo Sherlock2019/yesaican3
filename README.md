@@ -1,766 +1,288 @@
-# 🎯 YES AI CAN Community LAB
+# YES AI CAN — Community LAB
 
-> **The place where problems meet solutions, pain points meet cures, and people help people.**
+**A place where anyone can say "this part of my job hurts", and someone from another
+team can say "I can fix that".**
 
-A comprehensive AI agent platform for building, deploying, and managing intelligent assistants across enterprise use cases. From credit appraisal to fraud detection, from chatbots to compliance agents—all powered by open-source LLMs and modern ML frameworks.
+YES AI CAN turns scattered, unrecorded frustration into a queue of scoped, scored,
+comparable problems — then routes each one to a person who can solve it, tracks the
+proof-of-concept, and publishes what works to a shared agent library.
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green.svg)](https://fastapi.tiangolo.com/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.35+-red.svg)](https://streamlit.io/)
-
----
-
-## 📋 Table of Contents
-
-- [Overview](#-overview)
-- [Key Features](#-key-features)
-- [Architecture](#-architecture)
-- [Available Agents](#-available-agents)
-- [Quick Start](#-quick-start)
-- [Installation](#-installation)
-- [Usage](#-usage)
-- [Configuration](#-configuration)
-- [Development](#-development)
-- [Deployment](#-deployment)
-- [Documentation](#-documentation)
-- [Contributing](#-contributing)
-- [License](#-license)
+The premise is simple: in any organisation of a few thousand people, the person who
+can fix your problem almost certainly exists and almost certainly does not know your
+problem exists. This is the connective tissue.
 
 ---
 
-## 🌟 Overview
-
-**YES AI CAN Community LAB** is an enterprise-grade AI agent platform that enables organizations to rapidly prototype, deploy, and scale intelligent automation solutions. Built with a focus on explainability, compliance, and real-world business value.
-
-### What Makes This Special?
-
-- **🚀 Rapid Prototyping**: Build production-ready AI agents in minutes, not months
-- **🔓 Open Source First**: Powered by Ollama, Hugging Face, and open-source LLMs
-- **🎯 Business-Focused**: Pre-built agents for credit, fraud, compliance, and more
-- **🔍 Explainable AI**: Built-in SHAP explanations for regulatory compliance
-- **🏗️ Modular Architecture**: Ontology-driven design for easy customization
-- **📊 Production-Ready**: Complete with monitoring, logging, and deployment tools
-
----
-
-## ✨ Key Features
-
-### 🤖 AI Agent Platform
-- **Multi-Agent System**: Deploy multiple specialized agents simultaneously
-- **Agent Builder**: Visual interface for creating custom agents without code
-- **Agent Library**: Pre-configured templates for common use cases
-- **Dynamic Orchestration**: Intelligent routing and task delegation
-
-### 🧠 Machine Learning
-- **Hybrid Models**: Combine tabular ML (LightGBM, XGBoost) with LLMs
-- **AutoML Integration**: Automated model selection and hyperparameter tuning
-- **Model Registry**: Centralized model versioning and deployment
-- **RAG Support**: Retrieval-Augmented Generation with ChromaDB
-
-### 💬 Natural Language
-- **Multi-LLM Support**: Mistral, Llama 3, Phi-3, Gemma 2, Qwen 2
-- **Ollama Integration**: Local LLM inference without API costs
-- **Streaming Responses**: Real-time token streaming for better UX
-- **Context Management**: Efficient prompt engineering and token optimization
-
-### 🛡️ Enterprise Features
-- **Authentication & Authorization**: Role-based access control
-- **Audit Logging**: Complete activity tracking for compliance
-- **Data Privacy**: On-premise deployment with no data leaving your infrastructure
-- **API-First Design**: RESTful APIs with OpenAPI documentation
-
-### 📊 Analytics & Monitoring
-- **CEO Dashboard**: Executive-level insights and KPIs
-- **Real-Time Monitoring**: Live agent performance metrics
-- **Visitor Tracking**: User behavior analytics
-- **Error Logging**: Centralized error tracking and alerting
-
----
-
-## 🏗️ Architecture
+## The workflow
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     Streamlit Web UI                        │
-│  (Agent Builder | Challenge Hub | Dashboards | Chatbots)   │
-└─────────────────┬───────────────────────────────────────────┘
-                  │
-                  │ HTTP/WebSocket
-                  │
-┌─────────────────▼───────────────────────────────────────────┐
-│                     FastAPI Backend                         │
-│  ┌──────────────┬──────────────┬──────────────────────┐    │
-│  │   Agents     │   Training   │   Reports            │    │
-│  │   Router     │   Router     │   Router             │    │
-│  └──────────────┴──────────────┴──────────────────────┘    │
-└─────────────────┬───────────────────────────────────────────┘
-                  │
-    ┌─────────────┼─────────────┐
-    │             │             │
-┌───▼────┐  ┌────▼─────┐  ┌───▼──────┐
-│ Ollama │  │ ChromaDB │  │ SQLite   │
-│  LLMs  │  │   RAG    │  │   DB     │
-└────────┘  └──────────┘  └──────────┘
+Painpoint  →  Cure  →  POC  →  Proven  →  Community Agent Library
+ (anyone)   (a helper) (built) (measured)      (reusable)
 ```
 
-### Technology Stack
+Every stage is a page in the app, and every record carries the ontology context that
+lets the next stage be automatic rather than a fresh conversation.
 
-**Frontend:**
-- Streamlit 1.35+ (Interactive UI)
-- Plotly & Altair (Data Visualization)
-- Custom CSS/JS (Responsive Design)
-
-**Backend:**
-- FastAPI 0.115+ (REST API)
-- Uvicorn (ASGI Server)
-- SQLAlchemy 2.0+ (ORM)
-- Pydantic 2.9+ (Data Validation)
-
-**Machine Learning:**
-- scikit-learn 1.4+ (Classical ML)
-- LightGBM, XGBoost, Random Forest
-- SHAP 0.45+ (Model Explainability)
-- sentence-transformers (Embeddings)
-
-**LLM & NLP:**
-- Ollama (Local LLM Inference)
-- Hugging Face Transformers
-- ChromaDB (Vector Database)
-- BGE Embeddings & Rerankers
-
-**DevOps:**
-- Docker & Docker Compose
-- Kubernetes (K8s manifests included)
-- Bash automation scripts
-- Git-based version control
+| Stage | What happens | Page |
+|---|---|---|
+| **Painpoint** | One sentence about a slow, manual or error-prone task. Scored for pain, opportunity and cross-unit reach. | Submit My PainPoints |
+| **Cure** | Someone — usually from a *different* department — proposes what to build and why they are the right person. | Propose a Cure |
+| **POC** | A blueprint drafted from the ontology, with acceptance criteria, repo and deploy target. | Current POC |
+| **Proven** | Acceptance criteria met and measured against the original baseline. | Current Challenge Pipeline |
+| **Library** | Promoted to a reusable internal agent. | Community Agent Library |
 
 ---
 
-## 🤖 Available Agents
-
-### Financial Services
-
-#### 💳 Credit Appraisal Agent
-- **Purpose**: Automated credit risk assessment and loan decisioning
-- **Models**: LightGBM (scoring) + Mistral 7B (narratives)
-- **Features**: SHAP explanations, risk scoring, approval recommendations
-- **Use Cases**: Personal loans, business credit, mortgage pre-approval
-
-#### 🏦 Asset Appraisal Agent
-- **Purpose**: Real estate and asset valuation
-- **Models**: LightGBM (valuation) + Mistral 7B (reports)
-- **Features**: Comparative market analysis, automated reports
-- **Use Cases**: Property valuation, collateral assessment
-
-#### 📊 Credit Scoring Agent
-- **Purpose**: Fast credit score calculations and explanations
-- **Models**: Phi-3 3.8B (explanations)
-- **Features**: Real-time scoring, factor analysis
-- **Use Cases**: Quick credit checks, pre-qualification
-
-#### 🧩 Unified Risk Agent
-- **Purpose**: Holistic risk assessment across multiple dimensions
-- **Models**: LightGBM (scoring) + Mistral 7B (analysis)
-- **Features**: Multi-factor risk modeling, portfolio analysis
-- **Use Cases**: Enterprise risk management, compliance reporting
-
-### Security & Compliance
-
-#### 🛡️ Anti-Fraud & KYC Agent
-- **Purpose**: Fraud detection and identity verification
-- **Models**: Random Forest (detection) + Phi-3 3.8B (alerts)
-- **Features**: Real-time fraud scoring, KYC workflow automation
-- **Use Cases**: Transaction monitoring, customer onboarding
-
-#### ⚖️ Legal Compliance Agent
-- **Purpose**: Regulatory compliance checking and documentation
-- **Models**: Mistral 7B (regulatory analysis)
-- **Features**: Policy validation, compliance reporting
-- **Use Cases**: GDPR compliance, financial regulations
-
-### Operations & Support
-
-#### 💬 Chatbot Assistant
-- **Purpose**: Customer support and FAQ automation
-- **Models**: Mistral 7B (conversations)
-- **Features**: Context-aware responses, multi-turn dialogs
-- **Use Cases**: Customer service, internal helpdesk
-
-#### 🏢 Real Estate Evaluator
-- **Purpose**: Property analysis and market insights
-- **Models**: LightGBM + Mistral 7B
-- **Features**: Market trend analysis, investment recommendations
-- **Use Cases**: Real estate investment, property management
-
-#### 📈 CEO Driver Dashboard
-- **Purpose**: Executive KPI monitoring and insights
-- **Features**: Real-time metrics, trend analysis, alerts
-- **Use Cases**: Executive reporting, business intelligence
-
-### Platform Tools
-
-#### 🔧 Agent Builder
-- **Purpose**: Visual agent creation without coding
-- **Features**: Drag-and-drop interface, template library
-- **Use Cases**: Rapid prototyping, custom agent development
-
-#### 📚 Agent Library
-- **Purpose**: Browse and deploy pre-built agent templates
-- **Features**: Searchable catalog, one-click deployment
-- **Use Cases**: Quick starts, best practices reference
-
-#### 🎯 Challenge Hub
-- **Purpose**: Community-driven problem-solution marketplace
-- **Features**: Submit challenges, propose solutions, collaborate
-- **Use Cases**: Crowdsourced innovation, knowledge sharing
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- **Python 3.10+**
-- **Ollama** (for local LLM inference)
-- **8GB+ RAM** (16GB recommended)
-- **Linux/macOS/WSL2** (Windows with WSL2)
-
-### One-Command Start
+## Quick start
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/YesAIcancommunity-LAB.git
-cd YesAIcancommunity-LAB
+git clone git@github.com:Sherlock2019/yesaican3.git
+cd yesaican3
 
-# Run the startup script (installs dependencies, starts services)
-./start.sh
-```
-
-This will:
-1. ✅ Create a virtual environment
-2. ✅ Install all dependencies
-3. ✅ Start Ollama server
-4. ✅ Pull default LLM model (gemma2:9b)
-5. ✅ Start FastAPI backend (port 8100)
-6. ✅ Start Streamlit UI (port 8504)
-
-### Access the Platform
-
-- **🌐 Web UI**: http://localhost:8504
-- **📘 API Docs**: http://localhost:8100/docs
-- **📊 Health Check**: http://localhost:8100/health
-
----
-
-## 📦 Installation
-
-### Option 1: Local Development (Recommended)
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/yourusername/YesAIcancommunity-LAB.git
-cd YesAIcancommunity-LAB
-
-# 2. Create virtual environment
 python3 -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+.venv/bin/pip install -r requirements.txt
 
-# 3. Install dependencies
-pip install -r services/api/requirements.txt
-pip install -r services/ui/requirements.txt
-
-# 4. Install and start Ollama
-curl -fsSL https://ollama.com/install.sh | sh
-ollama serve &
-ollama pull gemma2:9b
-
-# 5. Set environment variables
-export PYTHONPATH=$(pwd)
-export OLLAMA_HOST=http://127.0.0.1:11434
-export API_PORT=8100
-export UI_PORT=8504
-
-# 6. Start services
-uvicorn services.api.main:app --host 0.0.0.0 --port 8100 --reload &
-streamlit run services/ui/app.py --server.port 8504 --server.address 0.0.0.0
+./start.sh                 # UI on http://localhost:8520, opens your browser
 ```
 
-### Option 2: Docker Compose
+`start.sh` frees the ports, starts the API and the Streamlit UI, waits for HTTP 200 and
+opens a browser. Useful overrides:
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/yourusername/YesAIcancommunity-LAB.git
-cd YesAIcancommunity-LAB
-
-# 2. Build and start containers
-docker-compose up --build
-
-# Access at http://localhost:8080
+UIPORT=8600 ./start.sh      # different port
+NO_BROWSER=1 ./start.sh     # CI, SSH, or a headless server
 ```
 
-### Option 3: Kubernetes
+To run the UI alone:
 
 ```bash
-# 1. Apply Kubernetes manifests
-kubectl apply -f k8s/deployment.yaml
-
-# 2. Check deployment status
-kubectl get pods
-kubectl get services
-
-# 3. Access via LoadBalancer or NodePort
-kubectl port-forward service/ai-agent-ui 8080:8080
+PYTHONPATH="$PWD" .venv/bin/streamlit run services/ui/app.py --server.port 8520
 ```
 
----
+### Load the demo
 
-## 🎮 Usage
-
-### Using Pre-Built Agents
-
-1. **Navigate to Agent Library** in the web UI
-2. **Select an agent** (e.g., Credit Appraisal)
-3. **Upload data** or enter information
-4. **Run analysis** and view results
-5. **Export reports** (PDF, JSON, CSV)
-
-### Building Custom Agents
-
-1. **Open Agent Builder** from the main menu
-2. **Choose a template** or start from scratch
-3. **Configure settings**:
-   - Select LLM model
-   - Define input schema
-   - Set up prompts
-   - Configure outputs
-4. **Test your agent** with sample data
-5. **Deploy** to production
-
-### Using the API
-
-```python
-import requests
-
-# Example: Credit Appraisal
-response = requests.post(
-    "http://localhost:8100/v1/agents/credit/appraise",
-    json={
-        "applicant_name": "John Doe",
-        "annual_income": 75000,
-        "credit_score": 720,
-        "loan_amount": 250000,
-        "employment_years": 5
-    }
-)
-
-result = response.json()
-print(f"Decision: {result['decision']}")
-print(f"Risk Score: {result['risk_score']}")
-print(f"Explanation: {result['explanation']}")
-```
-
-### Training Custom Models
+The app is more legible with data in it. One command seeds a complete worked example —
+13 painpoints across every business unit, 23 cures, 3 cross-unit engineering projects,
+15 people, and 2 published agents:
 
 ```bash
-# Train a credit model with your data
-python services/train/train_credit.py \
-  --data data/credit_applications.csv \
-  --model lightgbm \
-  --output agents/credit_appraisal/models/production/
-
-# The trained model will be automatically loaded by the agent
+python3 scripts/seed_demo_data.py            # add
+python3 scripts/seed_demo_data.py --remove   # take it back out
 ```
+
+Every seeded record carries `"is_sample": true`, so `--remove` is exact and leaves real
+submissions untouched. The seed runs through the same scoring, POC-drafting and
+promotion functions the live app uses, so demo data cannot drift from what a real
+submission produces — the script refuses to run if it would.
 
 ---
 
-## ⚙️ Configuration
+## What makes it more than a form
 
-### Environment Variables
+### Business Flow Ontology
 
-Create a `.env` file in the project root:
+Not an org chart. Units own **activities**, activities produce **business objects**, and
+an object landing in another unit's inbox **triggers** that unit's next activity:
+
+```
+Business Unit → performs Activity → produces Business Object
+              → becomes input to another BU → triggers its next Activity
+```
+
+Nine units, eight objects, eight edges model the value chain from Marketing through to
+Product. Because a painpoint is captured *on an edge* rather than floating free, the app
+can answer questions a ticket queue cannot: which handoffs cost the most hours, which
+units are downstream of a bottleneck, and who else is affected by a problem they never
+reported.
+
+See `services/shared/business_flow.py`.
+
+### Similarity — "would the same agent close both?"
+
+The interesting question is not whether two painpoints *read* alike. Billing says
+"invoice layout" and Finance says "reconciliation break" about work that wants the same
+fix, while two unrelated problems can share plenty of words. Token overlap misses exactly
+the pairs worth finding.
+
+So each painpoint is reduced to a **four-part signature**:
+
+| Part | Question |
+|---|---|
+| **Input artifact** | what arrives — a PDF, an export, a ticket, a dashboard query |
+| **Transformation verb** | what is done to it — extract, convert, reconcile, route, assemble, approve, search, summarise |
+| **Destination** | where the result goes — the ontology's object and consuming unit |
+| **Failure mode** | what goes wrong — errors, waiting, repetition |
+
+Scoring weights (summing to 100), then one multiplier that matters more than any of them:
+
+| Signal | Weight |
+|---|---|
+| Same transformation verb | 30 |
+| Same input artifact | 20 |
+| Same pain type | 15 |
+| Same business object / flow edge | 15 |
+| Same task | 10 |
+| Text overlap | 10 |
+
+**Cross-unit match → ×1.25.** Two people in one unit with the same problem is a
+*duplicate to merge*. Two different units with the same problem is a *shared fix that
+ships twice*. The second is worth more, so it ranks higher rather than merely being
+flagged.
+
+Results are banded, because the advice differs:
+
+- **≥70** — likely the same problem; merge or co-sponsor
+- **45–69** — same pattern, different context; one agent could serve both
+- **25–44** — worth a look
+
+For cures the question changes from "is this the same" to "can I reuse this build", so
+similarity is multiplied by **maturity**: `Draft ×0.6 · Prototype ×0.8 · Building/Testing
+×0.9 · In production ×1.3`. A shipped cure at 50% beats an identical draft at 70% —
+nobody wants to be pointed at someone's unstarted idea.
+
+Deliberately excluded from similarity: submitter, region, upvotes, recency, and hours.
+If impact fed similarity, every large painpoint would look similar to every other large
+painpoint purely for being large. Those belong to *ranking*, applied after matching.
+
+See `services/shared/similarity.py`.
+
+### Where it surfaces
+
+1. **At submit time** — "3 teams have described something like this", *before* you
+   submit. The highest-value moment: it turns a duplicate into a co-sponsor.
+2. **On the board** — a similarity column with jump links to every match.
+3. **On the cures list** — "reuse before you rebuild".
+
+---
+
+## Architecture
+
+Streamlit multipage app over plain JSON stores. No database is required to run it, and
+no API call sits in the path of anything a person is typing — that matters because
+drafting happens exactly when the backend is down.
+
+```
+services/
+  shared/                    pure logic, no Streamlit, fully unit-tested
+    pain_metrics.py          pain + opportunity scoring, pain-type lexicon, metrics
+    business_flow.py         the ontology: units, objects, edges, validation
+    pipeline.py              POC blueprints, stage_of(), promote_to_agent()
+    similarity.py            signature, scoring, bands, maturity
+    insights.py              dashboard analysis: counts, reach, cross-department
+  ui/
+    app.py                   home
+    pages/                   one file per nav entry
+    utils/
+      app_shell.py           fixed sidebar + top bar, nav definition
+      page_template.py       shared chrome and CSS
+      meta_store.py          JSON read/write
+  .sandbox_meta/             the data store (JSON)
+scripts/
+  seed_demo_data.py          the worked demo, reversible
+tests/                       354 tests
+```
+
+The split matters: everything in `services/shared/` is importable without Streamlit and
+tested directly, so the scoring and matching logic can be verified without driving a
+browser.
+
+### Data
+
+| File | Holds |
+|---|---|
+| `services/.sandbox_meta/how_ai_help_submissions.json` | painpoints |
+| `services/.sandbox_meta/how_ai_help_solutions.json` | cures |
+| `services/.sandbox_meta/humans.json` | community profiles |
+| `services/.sandbox_meta/projects.json` | cross-unit projects |
+| `services/ui/data/agents.json` | the published agent library |
+
+---
+
+## Is there an LLM in here?
+
+**Mostly no, and deliberately.** One optional call, everything else deterministic:
+
+- **`_call_baseline_llm()`** in `how_can_ai_help.py` drafts the AI baseline (summary,
+  workflow, risks, timeline) from a **local Ollama** instance. It probes first and gives
+  up silently if nothing is listening, because a form submit must never block on a model
+  load. Disable with `YESAICAN_BASELINE_LLM=0`.
+- **Everything else** — pain classification, scoring, POC drafting, similarity, and the
+  dashboard analysis — is lexicon and arithmetic. It is fast, reproducible, unit-testable,
+  and it explains itself: every similarity score comes with the reasons that produced it.
 
 ```bash
-# API Configuration
-API_PORT=8100
-API_HOST=0.0.0.0
-
-# UI Configuration
-UI_PORT=8504
-STREAMLIT_SERVER_PORT=8504
-STREAMLIT_SERVER_ADDRESS=0.0.0.0
-
-# Ollama Configuration
-OLLAMA_HOST=http://127.0.0.1:11434
-OLLAMA_MODEL=gemma2:9b
-SANDBOX_CHATBOT_MODEL=gemma2:9b
-
-# Database
-DATABASE_URL=sqlite:///./data/app.db
-
-# CORS
-CORS_ALLOW_ORIGINS=http://localhost:8504,http://localhost:3000
-
-# Logging
-LOG_LEVEL=INFO
-LOG_DIR=.logs
-
-# Feature Flags
-ENABLE_TRAINING=true
-ENABLE_EXPORTS=true
-ENABLE_VISITOR_TRACKING=true
+YESAICAN_BASELINE_LLM=0        # skip the model entirely
+OLLAMA_URL=http://host:11434   # default http://localhost:11434
+YESAICAN_BASELINE_MODEL=phi3   # default phi3:latest
 ```
 
-### Model Configuration
-
-Edit `config/agent_model_presets.yaml` to customize model recommendations:
-
-```yaml
-tabular_models:
-  credit_appraisal:
-    primary: "LightGBM"
-    fallback: "RandomForest"
-    alternatives: ["XGBoost", "LogisticRegression"]
-    reason: "Best for credit risk with imbalanced data"
-
-llm_models:
-  credit_appraisal:
-    primary: "mistral:7b-instruct"
-    fallback: "phi3:3.8b"
-    alternatives: ["gemma2:9b", "llama3:8b-instruct"]
-    reason: "Balanced performance for credit explanations"
-```
-
-### Agent Configuration
-
-Each agent has its own configuration in `agents/{agent_name}/config.json`:
-
-```json
-{
-  "name": "Credit Appraisal Agent",
-  "version": "1.0.0",
-  "description": "Automated credit risk assessment",
-  "models": {
-    "tabular": "lightgbm",
-    "llm": "mistral:7b-instruct"
-  },
-  "features": {
-    "shap_explanations": true,
-    "pdf_reports": true,
-    "api_enabled": true
-  },
-  "thresholds": {
-    "high_risk": 0.7,
-    "medium_risk": 0.4,
-    "low_risk": 0.2
-  }
-}
-```
+> The Metrics Dashboard button is labelled "Run AI Analysis" but calls
+> `insights.analyse()` — counting and set arithmetic, no model. The numbers are real and
+> independently audited against the raw JSON; the label overpromises.
 
 ---
 
-## 🛠️ Development
-
-### Project Structure
-
-```
-YesAIcancommunity-LAB/
-├── services/
-│   ├── api/                    # FastAPI backend
-│   │   ├── main.py            # API entry point
-│   │   ├── routers/           # API endpoints
-│   │   ├── models/            # Database models
-│   │   └── requirements.txt
-│   └── ui/                    # Streamlit frontend
-│       ├── app.py             # UI entry point
-│       ├── pages/             # Agent pages
-│       ├── utils/             # Shared utilities
-│       └── requirements.txt
-├── agents/                    # Agent definitions
-│   ├── credit_appraisal/
-│   ├── asset_appraisal/
-│   └── anti_fraud_kyc/
-├── ontology/                  # Ontology engine
-│   ├── engine.py
-│   ├── objects.py
-│   └── registry.py
-├── scripts/                   # Automation scripts
-│   ├── backup.sh
-│   ├── deploy.sh
-│   └── train_from_merged.sh
-├── k8s/                       # Kubernetes manifests
-├── docker-compose.yml
-├── Dockerfile
-├── start.sh                   # Main startup script
-└── README.md
-```
-
-### Running Tests
+## Testing
 
 ```bash
-# Run all tests
-pytest
-
-# Run specific test suite
-pytest tests/test_agents.py
-
-# Run with coverage
-pytest --cov=services --cov-report=html
+.venv/bin/python -m pytest tests -q          # 354 tests, ~1s
 ```
 
-### Code Quality
+Coverage is concentrated where correctness is not obvious by reading:
+
+| File | Tests | Covers |
+|---|---|---|
+| `test_similarity.py` | 44 | signatures, scoring, bands, cross-unit multiplier, maturity |
+| `test_business_flow.py` | 74 | ontology integrity, edge validation, activity ownership |
+| `test_pipeline.py` | 43 | blueprints, stage transitions, promotion |
+| `test_insights.py` | 23 | dashboard counts, reach, cross-department |
+| `test_opportunity_scoring.py` | — | pain and opportunity maths |
+| `test_page_regressions.py` | — | pages import and render without Streamlit |
+
+Two tests worth knowing about, because they encode judgements rather than mechanics:
+
+- `test_reach_beats_raw_hours_in_the_ranking` — a problem two teams share must outrank a
+  bigger one that bothers a single team. That is the entire point of the reach ranking.
+- `test_no_keyword_is_a_substring_of_another_in_the_same_class` — lexicon keywords are
+  matched as substrings, so `"mail"` beside `"email"` scores one word twice. This caught
+  five such pairs that would otherwise have quietly skewed every score.
+
+> Note: `pytest` with no argument also collects `scripts/test_agent_manager.py` and
+> `scripts/test_hf_agent_wrapper.py`, which fail to import against current
+> `huggingface_hub`. They are unrelated to the app. Run `pytest tests` .
+
+---
+
+## Known gaps
+
+Stated plainly, because a README that only lists strengths is not useful:
+
+- **Authentication is not enforced.** `auth_gate` covers a small number of pages. Access
+  control belongs at a reverse proxy in front of the app; do not expose this publicly as-is.
+- **JSON stores, not a database.** Fine for a lab; concurrent writes from many users are
+  not safe. Moving to SQLite is the obvious next step and touches only `meta_store.py`.
+- **Cure-to-cure similarity is weaker than painpoint similarity.** It leans on free-text
+  overlap, and cures for genuinely different problems correctly score low. Swapping that
+  one component for embeddings (`embeddinggemma` runs locally) is the natural fix — the
+  structural signals should stay lexical.
+- **Three legacy files do not compile** (`credit_scoring.py`, `lottery_wizard.py`, and one
+  backup dashboard). They are unreachable from the nav.
+- **`.git` is ~129 MB**, carrying vector stores committed before they were ignored.
+- **Auto-generated painpoint titles are unreliable** for very short submissions.
+
+---
+
+## Contributing
+
+The bar for a change is that it must be explainable. If you add a signal to the
+similarity scorer, it needs a weight, a reason string that a person can disagree with,
+and a test that fails without it.
 
 ```bash
-# Format code
-black services/ ontology/
-
-# Lint code
-flake8 services/ ontology/
-
-# Type checking
-mypy services/ ontology/
-```
-
-### Adding a New Agent
-
-1. **Create agent directory**:
-   ```bash
-   mkdir -p agents/my_agent/{models,config,data}
-   ```
-
-2. **Create agent page**:
-   ```bash
-   cp services/ui/pages/agent_template.py services/ui/pages/my_agent.py
-   ```
-
-3. **Configure agent**:
-   ```bash
-   cp agents/credit_appraisal/config.json agents/my_agent/config.json
-   # Edit config.json with your settings
-   ```
-
-4. **Add to navigation**:
-   Edit `services/ui/app.py` to add your agent to the menu.
-
-5. **Test your agent**:
-   ```bash
-   streamlit run services/ui/pages/my_agent.py
-   ```
-
----
-
-## 🚢 Deployment
-
-### Production Checklist
-
-- [ ] Set strong passwords and API keys
-- [ ] Configure HTTPS/TLS certificates
-- [ ] Set up database backups
-- [ ] Configure monitoring and alerting
-- [ ] Review and adjust resource limits
-- [ ] Enable audit logging
-- [ ] Test disaster recovery procedures
-- [ ] Document runbooks
-
-### Docker Deployment
-
-```bash
-# Build production image
-docker build -t yesaican-lab:latest .
-
-# Run with production settings
-docker run -d \
-  --name yesaican-lab \
-  -p 8080:8080 \
-  -e STREAMLIT_SERVER_PORT=8080 \
-  -e OLLAMA_URL=http://ollama:11434 \
-  -v $(pwd)/data:/app/data \
-  -v $(pwd)/agents:/app/agents \
-  yesaican-lab:latest
-```
-
-### Kubernetes Deployment
-
-```bash
-# Create namespace
-kubectl create namespace yesaican
-
-# Apply configurations
-kubectl apply -f k8s/deployment.yaml -n yesaican
-
-# Scale deployment
-kubectl scale deployment ai-agent-ui --replicas=3 -n yesaican
-
-# Check status
-kubectl get all -n yesaican
-```
-
-### Cloud Deployment
-
-#### AWS ECS
-```bash
-# Build and push to ECR
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <account>.dkr.ecr.us-east-1.amazonaws.com
-docker tag yesaican-lab:latest <account>.dkr.ecr.us-east-1.amazonaws.com/yesaican-lab:latest
-docker push <account>.dkr.ecr.us-east-1.amazonaws.com/yesaican-lab:latest
-
-# Deploy to ECS (use AWS Console or CLI)
-```
-
-#### Google Cloud Run
-```bash
-# Build and push to GCR
-gcloud builds submit --tag gcr.io/<project-id>/yesaican-lab
-
-# Deploy to Cloud Run
-gcloud run deploy yesaican-lab \
-  --image gcr.io/<project-id>/yesaican-lab \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated
+.venv/bin/python -m pytest tests -q
 ```
 
 ---
 
-## 📚 Documentation
-
-### Available Guides
-
-- **[Agent Setup Guide](COPIED_AGENT_SETUP_GUIDE.md)** - Detailed agent configuration
-- **[Model Presets](AGENT_MODEL_PRESETS.md)** - Recommended models per agent
-- **[Chatbot Behavior](CHATBOT_BEHAVIOR_RECOMMENDATIONS.md)** - Chatbot best practices
-- **[Log Monitoring](LOG_MONITORING_GUIDE.md)** - Monitoring and debugging
-- **[Visitor Tracking](VISITOR_TRACKING_README.md)** - Analytics setup
-- **[RAG Configuration](RAG_CONFIGURATION_ANALYSIS.md)** - RAG system setup
-- **[Optimization Summary](OPTIMIZATION_SUMMARY.md)** - Performance tuning
-
-### API Documentation
-
-Full API documentation is available at `/docs` when the API server is running:
-- **Swagger UI**: http://localhost:8100/docs
-- **ReDoc**: http://localhost:8100/redoc
-- **OpenAPI JSON**: http://localhost:8100/openapi.json
-
-### Architecture Diagrams
-
-See the `/docs` directory for detailed architecture diagrams and flow charts.
-
----
-
-## 🤝 Contributing
-
-We welcome contributions from the community! Here's how you can help:
-
-### Ways to Contribute
-
-1. **🐛 Report Bugs**: Open an issue with reproduction steps
-2. **💡 Suggest Features**: Share your ideas in discussions
-3. **📝 Improve Docs**: Fix typos, add examples, clarify instructions
-4. **🔧 Submit Code**: Fix bugs, add features, improve performance
-5. **🎨 Design**: Improve UI/UX, create assets
-6. **📊 Share Datasets**: Contribute training data (anonymized)
-
-### Development Workflow
-
-1. **Fork the repository**
-2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
-3. **Make your changes**: Follow code style guidelines
-4. **Test thoroughly**: Add tests for new features
-5. **Commit your changes**: `git commit -m 'Add amazing feature'`
-6. **Push to branch**: `git push origin feature/amazing-feature`
-7. **Open a Pull Request**: Describe your changes clearly
-
-### Code Style
-
-- **Python**: Follow PEP 8, use Black formatter
-- **Type Hints**: Use type annotations for all functions
-- **Docstrings**: Use Google-style docstrings
-- **Comments**: Explain "why", not "what"
-- **Tests**: Maintain >80% code coverage
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-### Technologies
-
-- **[Ollama](https://ollama.com/)** - Local LLM inference
-- **[Hugging Face](https://huggingface.co/)** - Model hub and transformers
-- **[FastAPI](https://fastapi.tiangolo.com/)** - Modern web framework
-- **[Streamlit](https://streamlit.io/)** - Interactive web apps
-- **[LightGBM](https://lightgbm.readthedocs.io/)** - Gradient boosting framework
-- **[SHAP](https://shap.readthedocs.io/)** - Model explainability
-
-### Community
-
-Special thanks to all contributors who have helped shape this project!
-
----
-
-## 📞 Support
-
-### Getting Help
-
-- **📖 Documentation**: Check the guides in this repo
-- **💬 Discussions**: Join our community discussions
-- **🐛 Issues**: Report bugs on GitHub Issues
-- **📧 Email**: support@yesaican.community
-
-### Community
-
-- **Discord**: [Join our server](https://discord.gg/yesaican)
-- **Twitter**: [@YesAICan](https://twitter.com/yesaican)
-- **LinkedIn**: [YES AI CAN Community](https://linkedin.com/company/yesaican)
-
----
-
-## 🗺️ Roadmap
-
-### Q1 2025
-- [ ] Multi-language support (Vietnamese, Spanish, French)
-- [ ] Advanced RAG with graph databases
-- [ ] Fine-tuning pipeline for custom models
-- [ ] Mobile app (iOS/Android)
-
-### Q2 2025
-- [ ] Enterprise SSO integration
-- [ ] Advanced analytics dashboard
-- [ ] A/B testing framework
-- [ ] Model marketplace
-
-### Q3 2025
-- [ ] Federated learning support
-- [ ] Edge deployment (Raspberry Pi, mobile)
-- [ ] Voice interface integration
-- [ ] Real-time collaboration features
-
-### Q4 2025
-- [ ] Multi-tenant SaaS platform
-- [ ] Advanced security features
-- [ ] Compliance certifications (SOC 2, ISO 27001)
-- [ ] Global CDN deployment
-
----
-
-## 📊 Project Stats
-
-![GitHub stars](https://img.shields.io/github/stars/yourusername/YesAIcancommunity-LAB?style=social)
-![GitHub forks](https://img.shields.io/github/forks/yourusername/YesAIcancommunity-LAB?style=social)
-![GitHub issues](https://img.shields.io/github/issues/yourusername/YesAIcancommunity-LAB)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/yourusername/YesAIcancommunity-LAB)
-
----
-
-<div align="center">
-
-**Made with ❤️ by the YES AI CAN Community**
-
-[Website](https://yesaican.community) • [Documentation](https://docs.yesaican.community) • [Blog](https://blog.yesaican.community)
-
-</div>
+*Our mission: give everyone — regardless of background — the confidence, tools, and
+platform to say "YES, AI CAN BE HELPED, or HELP each other."*

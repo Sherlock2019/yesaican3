@@ -8,7 +8,9 @@ from typing import Any, Dict, List
 
 import streamlit as st
 
+from services.shared.records import carry_opportunity_fields
 from services.ui.utils.meta_store import META_DIR, load_json, save_json
+from services.ui.utils.page_template import page_chrome
 
 st.set_page_config(
     page_title="Project Hub — YES AI CAN",
@@ -41,8 +43,8 @@ SAMPLE_PROJECTS: List[Dict[str, Any]] = [
     {
         "id": "cx_sentiment_heatmap",
         "title": "CX Sentiment Heatmap",
-        "summary": "Streaming sentiment insights for Rackspace customer boards.",
-        "description": "Streaming sentiment insights for Rackspace customer boards.",
+        "summary": "Streaming sentiment insights for our Community customer boards.",
+        "description": "Streaming sentiment insights for our Community customer boards.",
         "business_area": "Customer Success",
         "phase": "Incubation",
         "status": "Incubation",
@@ -184,8 +186,9 @@ def convert_submission_to_project(submission_id: str, fallback: Dict[str, Any]) 
         "urgent_score": source.get("urgency"),
         "impact_score": source.get("impact_score") or fallback.get("impact"),
     }
-    if submission and submission.get("ai_baseline"):
-        project_entry["ai_baseline"] = submission["ai_baseline"]
+    # Carry the whole opportunity block, not just the AI baseline — the intake
+    # wizard's pain sizing, scoring and metric plan travel with the project.
+    carry_opportunity_fields(source, project_entry)
     ensure_project_id(project_entry)
     projects.insert(0, project_entry)
     save_projects(projects)
@@ -389,7 +392,7 @@ def generate_id() -> str:
     return f"project_{datetime.now().strftime('%Y%m%d%H%M%S')}_{len(load_projects())}"
 
 # Page header
-st.title("🧱 Project Hub — What AI Knows / What AI Built")
+page_chrome("", "Projects", "Prototypes, MVPs and production launches.")
 st.markdown("**YES AI CAN — Rackers Lab & Community**")
 st.markdown("---")
 

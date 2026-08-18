@@ -7,6 +7,14 @@ import os
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Any
+import pandas as pd
+
+from collections import Counter
+
+from services.shared import insights, similarity
+from services.shared.pipeline import stage_of
+from services.ui.utils.meta_store import load_json
+from services.ui.utils.page_template import page_chrome
 
 st.set_page_config(
     page_title="Admin & REX 2.0 — YES AI CAN",
@@ -71,20 +79,36 @@ def save_stats(stats: Dict):
     with open(STATS_FILE, "w", encoding="utf-8") as f:
         json.dump(stats, f, ensure_ascii=False, indent=2)
 
+
+def load_library_agents() -> List[Dict]:
+    """The production library — the file the pipeline publishes proven POCs to.
+
+    Not the same store as load_agents() above, which reads the admin metadata
+    copy. Counting "cures in production" from that one reported zero however
+    many had shipped.
+    """
+    path = Path(__file__).resolve().parents[1] / "data" / "agents.json"
+    if not path.exists():
+        return []
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return [row for row in data if isinstance(row, dict)] if isinstance(data, list) else []
+    except Exception:
+        return []
+
+
 # Page header
-st.title("⚙️ Admin & REX 2.0 Integration")
-st.markdown("**YES AI CAN — Rackers Lab & Community**")
+page_chrome("admin_rex", "Metrics Dashboard",
+            "What our Community has submitted, solved and shipped.")
 st.markdown("---")
 
-# Simple password check (in production, use proper authentication)
-if 'admin_authenticated' not in st.session_state:
-    password = st.text_input("🔐 Admin Password", type="password")
-    if st.button("Login"):
-        # Simple check - in production, use proper auth
-        if password == "admin123" or password == "yesaican":  # Change this!
-            st.session_state.admin_authenticated = True
-            st.rerun()
-    st.stop()
+# The admin password gate is gone. It compared against "admin123" hard-coded in
+# this file, so it kept nobody out and told anyone who read the source the
+# shared secret. Access belongs at the reverse proxy — see auth_gate's docstring.
+
+submissions = load_json("how_ai_help_submissions.json", [])
+solutions = load_json("how_ai_help_solutions.json", [])
+library = load_library_agents()
 
 humans = load_humans()
 projects = load_projects()
@@ -92,7 +116,6 @@ agents = load_agents()
 patterns = load_patterns()
 stats = load_stats()
 
-# Update stats
 stats['total_humans'] = len(humans)
 stats['total_projects'] = len(projects)
 stats['total_agents'] = len(agents)
@@ -100,140 +123,202 @@ stats['total_patterns'] = len(patterns)
 stats['last_updated'] = datetime.now().isoformat()
 save_stats(stats)
 
-# Tabs: Overview, Users, Projects, Agents, REX Export
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Overview", "👤 Users", "🧱 Projects", "🤖 Agents", "📤 REX 2.0 Export"])
+summary = insights.overview(submissions, solutions, library)
 
-with tab1:
-    st.subheader("Platform Statistics")
-    
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Total Rackers", stats.get('total_humans', 0))
-    with col2:
-        st.metric("Total Projects", stats.get('total_projects', 0))
-    with col3:
-        st.metric("Total Agents", stats.get('total_agents', 0))
-    with col4:
-        st.metric("Total Patterns", stats.get('total_patterns', 0))
-    
-    st.markdown("---")
-    
-    # Skills extraction
-    all_skills = []
-    for human in humans:
-        all_skills.extend(human.get('skills', []))
-    
-    from collections import Counter
-    skill_counts = Counter(all_skills)
-    top_skills = skill_counts.most_common(10)
-    
-    st.subheader("Top Skills")
-    for skill, count in top_skills:
-        st.write(f"**{skill}:** {count} Rackers")
-    
-    # Usage metrics
-    st.subheader("Usage Metrics")
-    st.write(f"**Last Updated:** {stats.get('last_updated', 'N/A')}")
-    st.write(f"**Ambassadors:** {len([h for h in humans if h.get('ambassador', False)])}")
-    st.write(f"**Projects in Production:** {len([p for p in projects if p.get('phase') == 'Ready for Production'])}")
-    st.write(f"**Customer READY Agents:** {len([a for a in agents if a.get('status') == 'Customer READY'])}")
+# High enough to mean "every unit". The per-unit views are read as a complete
+# picture — their hours are expected to add up to the headline total — so a
+# silent top-10 cut makes them lie by omission rather than merely abbreviate.
+ALL_UNITS = 1000
 
-with tab2:
-    st.subheader("All Users (Human Stack)")
-    
-    st.write(f"**Total Users: {len(humans)}**")
-    
-    for human in humans:
-        with st.expander(f"👤 {human.get('name', 'Unknown')} — {human.get('email', 'N/A')}"):
-            col1, col2 = st.columns(2)
-            with col1:
-                st.write(f"**Department:** {human.get('department', 'N/A')}")
-                st.write(f"**Team:** {human.get('team', 'N/A')}")
-                st.write(f"**Role:** {human.get('role', 'N/A')}")
-                st.write(f"**Region:** {human.get('region', 'N/A')}")
-            with col2:
-                st.write(f"**Skills:** {', '.join(human.get('skills', []))}")
-                st.write(f"**Ambassador:** {'Yes' if human.get('ambassador') else 'No'}")
-                st.write(f"**Created:** {human.get('created_at', 'N/A')[:10]}")
-                st.write(f"**Updated:** {human.get('updated_at', 'N/A')[:10]}")
+# ---------------------------------------------------------------- live stats
+st.subheader("Current projects")
+row_a = st.columns(4, gap="small")
+row_a[0].metric("Painpoints on the board", summary["painpoints_total"])
+row_a[1].metric(f"New (last {insights.NEW_WINDOW_DAYS}d)", summary["painpoints_new"])
+row_a[2].metric("Solved", summary["painpoints_solved"])
+row_a[3].metric("Still open", summary["painpoints_open"])
 
-with tab3:
-    st.subheader("All Projects")
-    
-    st.write(f"**Total Projects: {len(projects)}**")
-    
-    for project in projects:
-        with st.expander(f"🧱 {project.get('title', 'Untitled')} — {project.get('phase', 'N/A')}"):
-            st.write(f"**Description:** {project.get('description', 'N/A')}")
-            st.write(f"**Authors:** {', '.join(project.get('authors', []))}")
-            st.write(f"**Tags:** {', '.join(project.get('tags', []))}")
-            st.write(f"**Stars:** {project.get('stars', 0)}")
-            st.write(f"**Created:** {project.get('created_at', 'N/A')[:10]}")
+row_b = st.columns(4, gap="small")
+row_b[0].metric("Cures proposed", summary["cures_proposed"])
+row_b[1].metric("Current POCs", summary["pocs_current"])
+row_b[2].metric("POCs proven", summary["pocs_proven"])
+row_b[3].metric("In production library", summary["in_production_library"])
 
-with tab4:
-    st.subheader("All Agents")
-    
-    st.write(f"**Total Agents: {len(agents)}**")
-    
-    for agent in agents:
-        with st.expander(f"🤖 {agent.get('name', 'Unknown')} — {agent.get('status', 'N/A')}"):
-            st.write(f"**Description:** {agent.get('description', 'N/A')}")
-            st.write(f"**Industry:** {agent.get('industry', 'N/A')}")
-            st.write(f"**Version:** {agent.get('version', 'N/A')}")
-            st.write(f"**Authors:** {', '.join(agent.get('authors', []))}")
-            st.write(f"**Created:** {agent.get('created_at', 'N/A')[:10]}")
+row_c = st.columns(3, gap="small")
+row_c[0].metric("Hours/year on the board", f"{summary['hours_on_the_board']:,.0f}")
+row_c[1].metric("Hours being addressed", f"{summary['hours_addressed']:,.0f}")
+row_c[2].metric("Agents in library", summary["agents_total"])
 
-with tab5:
-    st.subheader("REX 2.0 Metadata Export")
-    
-    st.info("📤 Export metadata in REX 2.0 compatible format")
-    
-    export_type = st.selectbox("Export Type", 
-                               ["Skills", "Agent Patterns", "Project Metadata", "Usage Metrics", "All"])
-    
-    if st.button("📥 Generate Export"):
-        export_data = {}
-        
-        if export_type in ["Skills", "All"]:
-            all_skills_list = []
-            for human in humans:
-                for skill in human.get('skills', []):
-                    all_skills_list.append({
-                        "skill": skill,
-                        "human_id": human.get('id'),
-                        "human_name": human.get('name')
-                    })
-            export_data['skills'] = all_skills_list
-        
-        if export_type in ["Agent Patterns", "All"]:
-            export_data['agent_patterns'] = agents
-        
-        if export_type in ["Project Metadata", "All"]:
-            export_data['projects'] = projects
-        
-        if export_type in ["Usage Metrics", "All"]:
-            export_data['usage_metrics'] = {
-                "total_humans": stats.get('total_humans', 0),
-                "total_projects": stats.get('total_projects', 0),
-                "total_agents": stats.get('total_agents', 0),
-                "total_patterns": stats.get('total_patterns', 0),
-                "last_updated": stats.get('last_updated')
-            }
-        
-        if export_type == "All":
-            export_data['reuse_opportunities'] = {
-                "high_reuse_agents": [a for a in agents if a.get('status') in ['Customer READY', 'Production READY']],
-                "popular_patterns": patterns[:10]  # Top 10 patterns
-            }
-        
-        # Display JSON
-        st.json(export_data)
-        
-        # Download button
-        export_json = json.dumps(export_data, ensure_ascii=False, indent=2)
-        st.download_button(
-            label="📥 Download JSON",
-            data=export_json,
-            file_name=f"rex2_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-            mime="application/json"
-        )
+st.divider()
+
+# ------------------------------------------------------------------- charts
+st.subheader("Where the pain is")
+
+chart_left, chart_right = st.columns(2, gap="medium")
+
+with chart_left:
+    st.markdown("**Hours a year, by business unit**")
+    # by_business_unit defaults to the top 10. There are more units than that,
+    # and a chart that silently drops five of them while the total above it
+    # counts all fifteen is worse than no chart.
+    units = insights.by_business_unit(submissions, limit=ALL_UNITS)
+    if units:
+        # Hours rather than a count of painpoints: one unit with a 2,000-hour
+        # problem matters more than another with three small ones, and a bar
+        # chart of counts would say the opposite.
+        frame = (pd.DataFrame(units)
+                 .sort_values("annual_hours", ascending=False)
+                 .set_index("unit")[["annual_hours"]])
+        st.bar_chart(frame.rename(columns={"annual_hours": "Hours / year"}),
+                     color="#6d5bd0", height=300)
+    else:
+        st.info("No unit recorded on any painpoint yet.")
+
+with chart_right:
+    st.markdown("**Where everything sits in the pipeline**")
+    stage_counts = Counter(stage_of(record) for record in submissions)
+    # Numbered labels because st.bar_chart sorts its index alphabetically, which
+    # rendered the funnel as Captured / In library / POC drafted / Proven — the
+    # stages in an order the work never actually travels in.
+    ordered = [(label, stage_counts.get(key, 0)) for key, label in (
+        ("captured", "1 Captured"), ("poc", "2 POC drafted"),
+        ("proven", "3 Proven"), ("published", "4 In library"))]
+    st.bar_chart(pd.DataFrame(ordered, columns=["Stage", "Painpoints"]).set_index("Stage"),
+                 color="#2fa37a", height=300)
+
+st.markdown("**Painpoints submitted over time**")
+dated = []
+for record in submissions:
+    raw = str(record.get("created_at") or "").strip()
+    if not raw:
+        continue
+    try:
+        moment = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        continue
+    dated.append(moment.date())
+if dated:
+    # Cumulative, not per-day: with a handful of submissions a daily bar chart
+    # is mostly zeros and reads as though nothing is happening.
+    series = pd.Series(1, index=pd.to_datetime(sorted(dated)))
+    st.area_chart(series.resample("D").sum().cumsum().rename("Painpoints on the board"),
+                  color="#6d5bd0", height=240)
+else:
+    st.caption("No submission dates recorded yet.")
+
+st.divider()
+
+# --------------------------------------------------------------- AI analysis
+st.subheader("🤖 AI Analysis")
+st.caption(
+    "Reads every submission, cure and published agent, and cross-references them "
+    "against the business-flow ontology to find where the same pain is felt twice."
+)
+
+if st.button("🤖  Run AI Analysis", type="primary"):
+    st.session_state["rex_analysis"] = insights.analyse(submissions, solutions, library)
+
+analysis = st.session_state.get("rex_analysis")
+if analysis:
+    st.markdown("#### Headline")
+    st.dataframe(
+        pd.DataFrame([
+            {"Metric": "New painpoints", "Value": analysis["overview"]["painpoints_new"]},
+            {"Metric": "Painpoints solved", "Value": analysis["overview"]["painpoints_solved"]},
+            {"Metric": "Current POCs", "Value": analysis["overview"]["pocs_current"]},
+            {"Metric": "Cures in production library",
+             "Value": analysis["overview"]["in_production_library"]},
+        ]),
+        hide_index=True, use_container_width=True)
+
+    left, right = st.columns(2, gap="medium")
+
+    with left:
+        st.markdown("#### Most active people")
+        people = analysis["people"]
+        if people:
+            st.dataframe(
+                pd.DataFrame(people).rename(columns={
+                    "name": "Person", "submitted": "Painpoints",
+                    "cures": "Cures", "total": "Total"}),
+                hide_index=True, use_container_width=True)
+        else:
+            st.info("Nobody has put their name to a submission or a cure yet.")
+
+    with right:
+        st.markdown("#### Business units with the most pain")
+        # Not analysis["units"], which takes the default top 10 and would hide
+        # units while the headline hours above still counted them.
+        units = insights.by_business_unit(submissions, limit=ALL_UNITS)
+        st.caption(f"All {len(units)} units. Ranked by painpoint count, then hours.")
+        if units:
+            frame = pd.DataFrame(units)
+            frame["annual_hours"] = frame["annual_hours"].map(lambda v: f"{v:,.0f}")
+            st.dataframe(
+                frame.rename(columns={
+                    "unit": "Business unit", "painpoints": "Painpoints",
+                    "annual_hours": "Hours / year"}),
+                hide_index=True, use_container_width=True)
+        else:
+            st.info("No unit recorded on any painpoint yet.")
+
+    st.markdown("#### Top 10 painpoints by cross-unit reach")
+    st.caption(
+        "Ranked by how many business units feel it, using the ontology map — the flow "
+        "edge it sits on, where its output goes, and any other unit reporting the same "
+        "kind of pain. A problem five teams share is worth fixing before a bigger one "
+        "that bothers a single team."
+    )
+    reach = analysis["top_reach"]
+    if reach:
+        frame = pd.DataFrame(reach)
+        frame["unit_names"] = frame["unit_names"].map(lambda names: ", ".join(names))
+        frame["annual_hours"] = frame["annual_hours"].map(lambda v: f"{v:,.0f}")
+        frame["reach_hours"] = frame["reach_hours"].map(lambda v: f"{v:,.0f}")
+        st.dataframe(
+            frame[["title", "unit", "pain_type", "units", "unit_names",
+                   "annual_hours", "reach_hours", "score"]].rename(columns={
+                "title": "Painpoint", "unit": "Owned by", "pain_type": "Type",
+                "units": "Units reached", "unit_names": "Which units",
+                "annual_hours": "Hours / year", "reach_hours": "Reach-weighted hours",
+                "score": "Opportunity"}),
+            hide_index=True, use_container_width=True)
+    else:
+        st.info("Nothing to rank yet.")
+
+    st.markdown("#### Painpoints felt across departments")
+    cross = analysis["cross_department"]
+    if cross:
+        frame = pd.DataFrame(cross)
+        frame["unit_names"] = frame["unit_names"].map(lambda names: ", ".join(names))
+        st.dataframe(
+            frame[["title", "units", "unit_names", "pain_type"]].rename(columns={
+                "title": "Painpoint", "units": "Units", "unit_names": "Which units",
+                "pain_type": "Type"}),
+            hide_index=True, use_container_width=True)
+    else:
+        st.info("No painpoint currently reaches more than one unit.")
+
+    st.markdown("#### Most similar painpoints")
+    st.caption(
+        "Scored on the shape of the work — what arrives, what is done to it, where it "
+        "goes — rather than on wording, because two teams rarely describe the same job "
+        "in the same words. **Reusable** means one agent could serve both."
+    )
+    pairs = similarity.painpoint_pairs(submissions, limit=15)
+    if pairs:
+        frame = pd.DataFrame(pairs)
+        frame["reasons"] = frame["reasons"].map(lambda items: " · ".join(items))
+        st.dataframe(
+            frame[["score", "band_label", "a", "a_unit", "b", "b_unit",
+                   "reusable", "cross_unit", "reasons"]].rename(columns={
+                "score": "Similarity", "band_label": "What it means",
+                "a": "Painpoint A", "a_unit": "A unit",
+                "b": "Painpoint B", "b_unit": "B unit",
+                "reusable": "One agent could serve both",
+                "cross_unit": "Different units", "reasons": "Why"}),
+            hide_index=True, use_container_width=True)
+    else:
+        st.info("No two painpoints look alike yet.")
+
+st.divider()

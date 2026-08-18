@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import List, Dict, Any
 
 import streamlit as st
+from services.ui.utils.page_template import page_chrome
 
 # Import error logger
 try:
@@ -571,7 +572,7 @@ def render_preview(agents: List[Dict[str, Any]]):
             st.markdown('</div>', unsafe_allow_html=True)
 
 def main():
-    st.title("🔧 Agent Manager Admin")
+    page_chrome("admin_agents", "Settings", "Agent configuration and platform administration.")
     st.markdown("**Manage agents displayed on the landing page**")
     st.markdown("Add, edit, or delete agents. Changes are saved to `services/ui/data/agents.json`")
     st.markdown("---")

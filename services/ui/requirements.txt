@@ -1,8 +1,12 @@
 fastapi>=0.110
 uvicorn[standard]>=0.30
 pandas>=2.2
-numpy>=1.26
-scikit-learn>=1.4
+# Upper bound is deliberate. scikit-learn 1.4.x and shap ship binaries built
+# against the numpy 1.x C ABI, and an unbounded `numpy>=1.26` silently pulled
+# 2.5.2 into the environment on a routine install. Lift this only together
+# with scikit-learn.
+numpy>=1.26,<2
+scikit-learn>=1.4,<1.5
 shap>=0.45
 fpdf2>=2.7
 python-multipart>=0.0.9
