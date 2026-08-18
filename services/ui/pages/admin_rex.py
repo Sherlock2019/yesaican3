@@ -12,6 +12,7 @@ import pandas as pd
 from collections import Counter
 
 from services.shared import insights, similarity
+from services.shared.pain_metrics import IMPROVEMENT_TARGETS
 from services.shared.pipeline import stage_of
 from services.ui.utils.meta_store import load_json
 from services.ui.utils.page_template import page_chrome
@@ -208,6 +209,85 @@ else:
 
 st.divider()
 
+# ------------------------------------------------- painpoint / cure register
+st.subheader("Painpoints and the cures found for them")
+st.caption(
+    "One row per painpoint: what it costs today, who is curing it, and what a fix "
+    "would return. **Time** and **Steps** show today's baseline and the target a fix "
+    "aims at. **Est. gain** is the conservative half-target figure — hours a year "
+    "returned if a fix only ever achieves half of what it targets — and it is shown "
+    "only where somebody has actually proposed a cure. These are targets derived from "
+    "the submitter's own baseline, not measurements."
+)
+
+cures_by_challenge: Dict[str, List[Dict]] = {}
+for cure in solutions:
+    key = str(cure.get("challenge_id") or "")
+    if key:
+        cures_by_challenge.setdefault(key, []).append(cure)
+
+
+def _unit_of(record: Dict) -> str:
+    context = record.get("twin_context") or {}
+    submitter = record.get("submitter")
+    submitter = submitter if isinstance(submitter, dict) else {}
+    return str(context.get("business_unit") or submitter.get("department") or "—")
+
+
+register_rows = []
+for record in submissions:
+    baseline = record.get("baseline") or {}
+    minutes = float(baseline.get("minutes_per_task") or 0)
+    steps = int(baseline.get("steps") or 0)
+    hours = float(baseline.get("annual_hours") or 0)
+    attached = cures_by_challenge.get(str(record.get("id") or ""), [])
+
+    # The same target multipliers the submitter was shown in the AI preview, so
+    # the dashboard cannot quote a different number to the same person.
+    time_cell = "—"
+    if minutes:
+        target_minutes = max(1, round(minutes * IMPROVEMENT_TARGETS["time_per_task"]))
+        time_cell = f"{minutes:g} → {target_minutes:g} min"
+    steps_cell = "—"
+    if steps:
+        steps_cell = f"{steps} → {max(1, round(steps * IMPROVEMENT_TARGETS['steps_per_task']))}"
+
+    lead = attached[0] if attached else {}
+    register_rows.append({
+        "Painpoint": str(record.get("title") or "Untitled")[:60],
+        "Business unit": _unit_of(record),
+        "Cure found": (str(lead.get("what_features") or lead.get("challenge") or "—")[:55]
+                       if attached else "— none yet"),
+        "Helper": (lead.get("helper") or lead.get("author") or "—") if attached else "—",
+        "Cures": len(attached),
+        "Status": (lead.get("status") or "Draft") if attached else "Open",
+        "Time / task": time_cell,
+        "Steps / task": steps_cell,
+        "Hours / year": f"{hours:,.0f}" if hours else "—",
+        # Only claimed where a cure exists: an unclaimed painpoint returns
+        # nothing, and showing a gain against it would be counting a saving
+        # nobody is working on.
+        "Est. gain h/yr": (f"{float(baseline.get('annual_hours_at_half') or 0):,.0f}"
+                           if attached and hours else "—"),
+    })
+
+if register_rows:
+    register_rows.sort(key=lambda row: -float(str(row["Hours / year"]).replace(",", "") or 0)
+                       if row["Hours / year"] != "—" else 0)
+    st.dataframe(pd.DataFrame(register_rows), hide_index=True, use_container_width=True,
+                 height=min(60 + 35 * len(register_rows), 620))
+
+    claimed = [r for r in register_rows if r["Est. gain h/yr"] != "—"]
+    total_gain = sum(float(r["Est. gain h/yr"].replace(",", "")) for r in claimed)
+    foot = st.columns(3, gap="small")
+    foot[0].metric("Painpoints with a cure", f"{len(claimed)} of {len(register_rows)}")
+    foot[1].metric("Est. gain, cured only", f"{total_gain:,.0f} h/yr")
+    foot[2].metric("Still unclaimed", len(register_rows) - len(claimed))
+else:
+    st.info("No painpoints on the board yet.")
+
+st.divider()
+
 # --------------------------------------------------------------- AI analysis
 st.subheader("🤖 AI Analysis")
 st.caption(
@@ -215,7 +295,14 @@ st.caption(
     "against the business-flow ontology to find where the same pain is felt twice."
 )
 
-if st.button("🤖  Run AI Analysis", type="primary"):
+# Runs on load rather than waiting for a click. It is a few milliseconds of set
+# arithmetic over a board this size, and a dashboard that shows nothing until
+# you press a button is a dashboard most people never see the interesting half
+# of. The button stays, to recompute after somebody submits.
+if "rex_analysis" not in st.session_state:
+    st.session_state["rex_analysis"] = insights.analyse(submissions, solutions, library)
+
+if st.button("🔄  Refresh analysis", type="primary"):
     st.session_state["rex_analysis"] = insights.analyse(submissions, solutions, library)
 
 analysis = st.session_state.get("rex_analysis")
