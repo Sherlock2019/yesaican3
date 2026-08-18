@@ -121,3 +121,7 @@ secrets.json
 *.whl
 dist/
 build/
+
+# Runtime output from start.sh
+.logs/
+.pids/
