@@ -176,16 +176,21 @@ html,body,[class*="css"]{ font-family:Inter,"Segoe UI",system-ui,-apple-system,s
   letter-spacing:-.01em;
   transition:background .15s ease,color .15s ease;
 }
-.yz-nav a:hover{ background:var(--nav-fill); color:var(--nav-ink-on); }
+/* !important and the explicit link states because Streamlit themes anchors
+   globally and its rule was winning — that is why the rail read purple rather
+   than the near-white this file already asked for. */
+.yz-nav a,
+.yz-nav a:link,
+.yz-nav a:visited{ color:#fff !important; }
+.yz-nav a:hover{ background:var(--nav-fill); color:#fff !important; }
 /* The iPadOS sidebar selection: a filled row in the tint colour with white
    text, rather than a faint wash plus a rule. On a desaturated ground the fill
    carries the state on its own, so the accent bar is no longer needed. */
 .yz-nav a.on{
   background:linear-gradient(135deg,var(--nav-tint),var(--nav-tint-2));
-  color:var(--nav-ink-on); font-weight:600;
+  color:#fff !important; font-weight:600;
   box-shadow:0 1px 6px rgba(10,132,255,.34);
 }
-.yz-nav a.on:hover{ color:var(--nav-ink-on); }
 .yz-nav svg{ width:19px; height:19px; flex:0 0 19px; stroke:currentColor; fill:none;
   stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; opacity:1; }
 /* Inactive glyphs sit at iOS secondaryLabel weight so the label leads and the
