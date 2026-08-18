@@ -9,14 +9,17 @@ set -euo pipefail
 # and binds for local use; on a headless box it skips the browser, works out the
 # host's public address, and prints the URL you can actually reach it on.
 #
+# The services run in the background and the script returns, so it is safe to
+# close the terminal or drop the SSH session. Use ./stop.sh to shut them down.
+#
 #   ./start.sh                     laptop: local, opens a browser
 #   PUBLIC_HOST=1.2.3.4 ./start.sh public host, explicit address
 #   PROD=1 ./start.sh              no --reload, no file watcher
-#   DETACH=1 ./start.sh            start and exit (systemd, CI, nohup)
+#   FOLLOW=1 ./start.sh            stay attached and watch the error stream
 #
 # Everything below is overridable from the environment:
 #
-#   APIPORT=8100  UIPORT=8504
+#   APIPORT=8100  UIPORT=8054
 #   PUBLIC_HOST=<ip|dns>     the address people will type; auto-detected on EC2
 #   BIND_ADDR=0.0.0.0        set to 127.0.0.1 to refuse remote connections
 #   BASE_URL_PATH=lab        when behind a reverse proxy at /lab
@@ -25,16 +28,14 @@ set -euo pipefail
 #   NO_BROWSER=1             never open a browser
 #   SKIP_INSTALL=1           skip pip install (fast restarts)
 #   PROD=1                   production: no reload, no watcher
-#   DETACH=1                 do not tail logs at the end
+#   FOLLOW=1                 tail the logs instead of returning
 # =============================================================================
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV="${ROOT}/.venv"
 LOGDIR="${ROOT}/.logs"
-# Same ports as the other Community LAB deployment, so a security group, proxy
-# rule or bookmark written for one works unchanged for the other.
 APIPORT="${APIPORT:-8100}"
-UIPORT="${UIPORT:-8504}"
+UIPORT="${UIPORT:-8054}"
 BIND_ADDR="${BIND_ADDR:-0.0.0.0}"
 BASE_URL_PATH="${BASE_URL_PATH:-}"
 OLLAMA_HOST="${OLLAMA_HOST:-http://127.0.0.1:11434}"
@@ -475,14 +476,23 @@ sleep 1
 touch "${COMBINED_LOG}"
 
 # ─────────────────────────────────────────────
-# Live Error View
+# Done — the services run in the background
 # ─────────────────────────────────────────────
-# Under systemd, CI, or `ssh host ./start.sh`, a blocking tail means the command
-# never returns and the caller hangs. DETACH=1 leaves the services up and exits.
-if [[ -n "${DETACH:-}" ]]; then
-  color_echo green "✅ Detached. Services keep running."
-  color_echo blue  "   Follow logs: tail -f ${COMBINED_LOG}"
-  color_echo blue  "   Stop:        kill \$(cat ${ROOT}/.pids/*.pid)"
+# Returning is the default. Everything above was started with nohup, so the
+# services outlive this shell: closing the terminal, dropping the SSH session or
+# running this from systemd all leave the app up. A blocking tail as the last
+# line would mean the command never returns, which is wrong for a server and
+# merely annoying on a laptop.
+#
+# FOLLOW=1 opts back into the live error view when you want to watch a start-up.
+if [[ -z "${FOLLOW:-}" ]]; then
+  echo "----------------------------------------------------"
+  color_echo green "✅ Running in the background."
+  color_echo blue  "   UI      ${UI_URL}"
+  color_echo blue  "   Follow  tail -f ${COMBINED_LOG}"
+  color_echo blue  "   Errors  FOLLOW=1 ./start.sh"
+  color_echo blue  "   Stop    ./stop.sh"
+  echo "----------------------------------------------------"
   exit 0
 fi
 

@@ -42,11 +42,14 @@ cd yesaican3
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 
-./start.sh                 # UI on http://localhost:8504, opens your browser
+./start.sh                 # UI on http://localhost:8054, opens your browser
+./stop.sh                  # shut it down
 ```
 
-`start.sh` frees the ports, starts the API and the Streamlit UI, waits for HTTP 200 and
-opens a browser.
+`start.sh` frees the ports, starts the API and the Streamlit UI, waits for HTTP 200, and
+**returns — the services keep running in the background.** Closing the terminal or
+dropping the SSH session leaves the app up. Use `FOLLOW=1 ./start.sh` to stay attached
+and watch the error stream instead.
 
 ### Running it on a public host
 
@@ -55,18 +58,18 @@ machine, skips the browser, and works out the address people will actually type 
 it reads the public IPv4 from instance metadata:
 
 ```bash
-PROD=1 DETACH=1 ./start.sh              # production, returns instead of tailing logs
+PROD=1 ./start.sh                       # production: no reload, workers, background
 PUBLIC_HOST=lab.example.com ./start.sh  # explicit address (DNS, or behind a proxy)
 ```
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `APIPORT` / `UIPORT` | `8100` / `8504` | ports |
+| `APIPORT` / `UIPORT` | `8100` / `8054` | ports |
 | `PUBLIC_HOST` | auto | the address people type; auto-detected on EC2 |
 | `BIND_ADDR` | `0.0.0.0` | set `127.0.0.1` to refuse remote connections |
 | `BASE_URL_PATH` | — | when proxied at a sub-path, e.g. `/lab` |
 | `PROD` | — | no `--reload`, no file watcher, `--workers` |
-| `DETACH` | — | start and exit — for systemd, CI, `ssh host ./start.sh` |
+| `FOLLOW` | — | stay attached and tail the error stream |
 | `WITH_OLLAMA` | auto | `0` skip entirely · `1` install and pull the model |
 | `SKIP_INSTALL` | — | skip `pip install` for fast restarts |
 | `NO_BROWSER` | — | never open a browser |
@@ -75,12 +78,12 @@ PUBLIC_HOST=lab.example.com ./start.sh  # explicit address (DNS, or behind a pro
 > it publicly makes every painpoint, name and cure readable by anyone who finds the port.
 > The script prints a warning when it detects this. Restrict the security group to your
 > own IP, put it behind a proxy that authenticates, or keep it on loopback and tunnel:
-> `ssh -L 8504:localhost:8504 user@host`.
+> `ssh -L 8054:localhost:8054 user@host`.
 
 To run the UI alone:
 
 ```bash
-PYTHONPATH="$PWD" .venv/bin/streamlit run services/ui/app.py --server.port 8504
+PYTHONPATH="$PWD" .venv/bin/streamlit run services/ui/app.py --server.port 8054
 ```
 
 ### Load the demo
