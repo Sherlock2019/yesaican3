@@ -21,7 +21,11 @@ __all__ = ["NAV_ITEMS", "render_shell", "SHELL_CSS"]
 NAV_ITEMS: list[tuple[str, str, str]] = [
     ("Home",                     "",                "home"),
     ("Getting Started",   "documentation_learning", "cap"),
-    ("Metrics Dashboard", "admin_rex",            "chart"),
+    # The ontology sits above the dashboard because it is what the dashboard's
+    # numbers are computed over — reach, cross-unit spread and similarity all
+    # read these handoffs.
+    ("My Company Workflows Ontology", "company_workflows", "org"),
+    ("PainPoints Metrics Dashboard", "admin_rex", "chart"),
     # Reading the board comes before adding to it: seeing that somebody already
     # reported your problem is the point at which a submission becomes a
     # co-sponsor instead of a duplicate.
@@ -59,6 +63,7 @@ _ICONS = {
     "book":  "M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5zM4 5.5V20.5",
     "cap":   "M2 9l10-5 10 5-10 5zM6 11.5V17c0 1.5 3 3 6 3s6-1.5 6-3v-5.5",
     "pill":  "M10.5 3.5a5 5 0 0 1 7 7l-7 7a5 5 0 0 1-7-7zM7 7l7 7",
+    "org":   "M9 4h6v4H9zM3 16h6v4H3zM15 16h6v4h-6zM12 8v4M6 16v-2h12v2",
     "chart": "M4 4v16h16M8 16v-5M12 16V8M16 16v-3",
     "gear":  "M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 4.6 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 2.9-1.2 2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9 2 2 0 1 1 0 4z",
 }

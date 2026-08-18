@@ -98,7 +98,7 @@ def load_library_agents() -> List[Dict]:
 
 
 # Page header
-page_chrome("admin_rex", "Metrics Dashboard",
+page_chrome("admin_rex", "PainPoints Metrics Dashboard",
             "What our Community has submitted, solved and shipped.")
 st.markdown("---")
 

@@ -1340,9 +1340,14 @@ def render_pain_point_capture(submissions: List[dict], active: str = "how_can_ai
     # how_it_works is rendered by intro_section, as its closing row.
     st.markdown(intro_section(), unsafe_allow_html=True)
 
-    # The company's workflows come before the form: you pick the handoff your
-    # task feeds while submitting, so the chain has to be on screen first.
-    flow_extras = render_business_flow(submissions)
+    # The workflow ontology itself now lives on its own page, My Company
+    # Workflows Ontology — it is reference material the whole app is built on,
+    # not a preamble to this form. Its extras are still loaded and registered
+    # here, because the task-workflow strip below offers the units, tasks and
+    # handoffs the ontology defines, including any the flow builder has added.
+    flow_extras = load_flow_extras()
+    bf.register_extras(flow_extras["edges"], flow_extras["objects"],
+                       flow_extras["overrides"], flow_extras["activities"])
 
     st.markdown(page_header(), unsafe_allow_html=True)
 
