@@ -29,7 +29,28 @@ lets the next stage be automatic rather than a fresh conversation.
 | **Cure** | Someone — usually from a *different* department — proposes what to build and why they are the right person. | Propose a Cure |
 | **POC** | A blueprint drafted from the ontology, with acceptance criteria, repo and deploy target. | Current POC |
 | **Proven** | Acceptance criteria met and measured against the original baseline. | Current Challenge Pipeline |
+| **Trained** | Humans teach it, and five gates decide if it is production-ready. | AI Human Trainers |
 | **Library** | Promoted to a reusable internal agent. | Community Agent Library |
+
+---
+
+## The pages
+
+| Page | What it does |
+|---|---|
+| **Getting Started** | What this is and how to use it. |
+| **My Company Workflows Ontology** | The business-flow model: units, activities, business objects, handoffs — plus an editor for fixing a handoff that is modelled wrong. Everything else is computed over this. |
+| **PainPoints Metrics Dashboard** | Live counts, four charts, a painpoint-to-cure register with time / steps / estimated gain, and an analysis that runs on load. |
+| **Current PainPoints** | The board. Every painpoint with its helper, status, and a similarity column linking to whoever else has the same problem. |
+| **Submit My PainPoints** | Three-step capture. Warns you *before* submitting if somebody already reported it. |
+| **Propose a Cure** | Pick a painpoint, say how you would fix it. |
+| **Current Cures and Remedies** | Every cure, the painpoint it treats, and "reuse before you rebuild". |
+| **Current Challenge Pipeline** | Where everything sits: captured → POC → proven → published. |
+| **Current POC** | Repo, deploy target, status, acceptance criteria. |
+| **AI Human Trainers** | Who owns each agent, who is teaching it, what each training round measured, and whether it is ready for production. |
+| **Community Agent Library** | What shipped, reusable internally. |
+| **Community** | Directory, profiles, ambassadors, cross-unit projects. |
+| **Improvements Feedback** | Suggestions about the LAB itself, with a "me too" count. |
 
 ---
 
@@ -179,6 +200,31 @@ See `services/shared/similarity.py`.
    submit. The highest-value moment: it turns a duplicate into a co-sponsor.
 2. **On the board** — a similarity column with jump links to every match.
 3. **On the cures list** — "reuse before you rebuild".
+4. **On the dashboard** — a stacked chart of which unit pairs share a problem,
+   coloured by *why* they match.
+
+### Production readiness
+
+An agent is "ready" when five facts are true, not when somebody says so:
+
+| Gate | Fact behind it |
+|---|---|
+| Has an owner | somebody is accountable for it in production |
+| Has a trainer | at least one human is teaching it |
+| Training happened | at least one round logged |
+| Accuracy clears the bar | latest measured round ≥ 90% (configurable) |
+| Acceptance passes | the POC's own criteria all met |
+
+Unmet gates are returned by name — "no owner, accuracy 71% against a 90% bar"
+rather than "62%". Two rules worth knowing: a round that recorded no accuracy is
+*skipped*, not counted as zero, because supplying examples without re-measuring
+is not evidence the agent got worse; and an agent with no POC cannot claim the
+acceptance gate, because absence of criteria is not passing them.
+
+Trainer suggestions come from the ontology: whoever reported the painpoint is the
+domain expert for the agent that fixes it, then the rest of that unit.
+
+See `services/shared/training.py`.
 
 ---
 
@@ -195,6 +241,7 @@ services/
     business_flow.py         the ontology: units, objects, edges, validation
     pipeline.py              POC blueprints, stage_of(), promote_to_agent()
     similarity.py            signature, scoring, bands, maturity
+    training.py              readiness gates, training rounds, trainer suggestions
     insights.py              dashboard analysis: counts, reach, cross-department
   ui/
     app.py                   home
@@ -206,7 +253,7 @@ services/
   .sandbox_meta/             the data store (JSON)
 scripts/
   seed_demo_data.py          the worked demo, reversible
-tests/                       354 tests
+tests/                       376 tests
 ```
 
 The split matters: everything in `services/shared/` is importable without Streamlit and
@@ -221,6 +268,8 @@ browser.
 | `services/.sandbox_meta/how_ai_help_solutions.json` | cures |
 | `services/.sandbox_meta/humans.json` | community profiles |
 | `services/.sandbox_meta/projects.json` | cross-unit projects |
+| `services/.sandbox_meta/agent_trainers.json` | ownership, trainers, training rounds |
+| `services/.sandbox_meta/improvement_feedback.json` | feedback about the LAB itself |
 | `services/ui/data/agents.json` | the published agent library |
 
 ---
@@ -252,7 +301,7 @@ YESAICAN_BASELINE_MODEL=phi3   # default phi3:latest
 ## Testing
 
 ```bash
-.venv/bin/python -m pytest tests -q          # 354 tests, ~1s
+.venv/bin/python -m pytest tests -q          # 376 tests, ~1s
 ```
 
 Coverage is concentrated where correctness is not obvious by reading:
@@ -263,6 +312,7 @@ Coverage is concentrated where correctness is not obvious by reading:
 | `test_business_flow.py` | 74 | ontology integrity, edge validation, activity ownership |
 | `test_pipeline.py` | 43 | blueprints, stage transitions, promotion |
 | `test_insights.py` | 23 | dashboard counts, reach, cross-department |
+| `test_training.py` | 22 | readiness gates, accuracy rules, trainer suggestions |
 | `test_opportunity_scoring.py` | — | pain and opportunity maths |
 | `test_page_regressions.py` | — | pages import and render without Streamlit |
 
