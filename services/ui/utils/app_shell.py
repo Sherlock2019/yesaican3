@@ -150,6 +150,17 @@ html,body,[class*="css"]{ font-family:Inter,"Segoe UI",system-ui,-apple-system,s
 /* iOS secondaryLabel, the one place a muted tone is correct — it is a caption,
    not a control. */
 .yz-brand span{ display:block; color:rgba(235,235,245,.60); font-size:.71rem; letter-spacing:.02em; }
+.yz-by{
+  display:block; margin-top:.3rem; font-size:.68rem; line-height:1.35;
+  color:rgba(235,235,245,.45); letter-spacing:.01em;
+}
+/* font-size has to be restated: ".yz-brand b" matches this <b> too and would
+   otherwise render the name at the wordmark's 1.32rem. */
+.yz-by b{ color:rgba(235,235,245,.72); font-weight:600; font-size:.68rem;
+  display:inline; letter-spacing:.01em; }
+/* display:inline for the same reason as the <b> above — ".yz-brand span" makes
+   every span in here a block, which put the heart on a line of its own. */
+.yz-by .heart{ color:#FF375F; display:inline; }   /* iOS systemPink, dark */
 
 .yz-nav{ display:flex; flex-direction:column; gap:.14rem; }
 .yz-nav a{
@@ -256,6 +267,10 @@ def _nav(active: str) -> str:
 def _c(markup: str) -> str:
     """Strip per-line indentation.
 
+    Note the lines are joined with nothing between them, so a sentence broken
+    across two source lines loses the space at the break — "for Humans\\n by"
+    renders as "for Humansby". Keep any run of visible text on one line.
+
     Streamlit runs markdown before HTML, and markdown turns any four-space
     indented line into a code block — which prints raw tags on the page.
     """
@@ -298,7 +313,9 @@ def render_shell(active: str = "") -> str:
 <div class="yz-sb">
   <div class="yz-brand">
     {_brand_mark()}
-    <span><b>YES <i>AI</i> CAN</b><span>Community LAB</span></span>
+    <span><b>YES <i>AI</i> CAN</b><span>Community LAB</span>
+      <span class="yz-by">Made with&nbsp;<span class="heart">&#10084;</span>&nbsp;for Humans by <b>Dzoan Nguyen-tran</b></span>
+    </span>
   </div>
   <nav class="yz-nav">{_nav(active)}</nav>
   <div class="yz-promo">

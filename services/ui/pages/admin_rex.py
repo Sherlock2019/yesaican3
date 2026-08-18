@@ -187,6 +187,81 @@ with chart_right:
     st.bar_chart(pd.DataFrame(ordered, columns=["Stage", "Painpoints"]).set_index("Stage"),
                  color="#2fa37a", height=300)
 
+st.markdown("**Business units ranked by how many painpoints they carry**")
+st.caption(
+    "Count, not hours — this is about how many separate problems a unit is living with. "
+    "The hours chart above answers the other question, and the two disagree: Sales carries "
+    "the most hours, but that is not the same as carrying the most problems."
+)
+ranked = insights.by_business_unit(submissions, limit=ALL_UNITS)
+if ranked:
+    frame = pd.DataFrame(ranked).sort_values("painpoints", ascending=False)
+    # Horizontal, because unit names are long enough that a vertical axis turns
+    # them 90 degrees and makes the ranking unreadable — which is the one thing
+    # this chart exists to show.
+    #
+    # sort takes a column name, optionally "-" prefixed for descending; passing
+    # None raises inside Streamlit rather than meaning "leave my order alone",
+    # and without it the bars come back alphabetical, which is not a ranking.
+    st.bar_chart(frame, x="unit", y="painpoints", horizontal=True,
+                 x_label="Painpoints", y_label="", color="#6d5bd0",
+                 height=max(240, 30 * len(frame)), sort="-painpoints")
+else:
+    st.info("No unit recorded on any painpoint yet.")
+
+# ------------------------------------------------ which units share a problem
+st.markdown("**Business units that share the same kind of painpoint**")
+st.caption(
+    "Every cross-unit match, grouped by the pair of units feeling it and coloured by "
+    "*why* they match. A tall bar is two teams who could sponsor one agent between them. "
+    "The legend is the matching criteria themselves — same job, same input, same business "
+    "object — so you can see whether a pair genuinely shares the work or merely the wording."
+)
+
+# The reason strings are the scorer's own explanation of each match, so the
+# legend is derived from them rather than being a second, hand-written list that
+# could drift away from what the scorer actually did.
+_CRITERION = {
+    "Same job": "Same job (what is done to it)",
+    "Same input": "Same input artifact",
+    "Same kind of pain": "Same pain type",
+    "Same business object": "Same business object",
+    "Output goes to the same place": "Same destination",
+    "Same task": "Same task",
+}
+
+pair_rows: List[Dict[str, Any]] = []
+for pair in similarity.painpoint_pairs(submissions, limit=500):
+    if not pair["cross_unit"]:
+        continue
+    left, right = sorted([pair["a_unit"] or "Unassigned", pair["b_unit"] or "Unassigned"])
+    for reason in pair["reasons"]:
+        for prefix, label in _CRITERION.items():
+            if reason.startswith(prefix):
+                pair_rows.append({"Units": f"{left} ↔ {right}", "Why they match": label,
+                                  "Matches": 1})
+                break
+
+if pair_rows:
+    grouped = (pd.DataFrame(pair_rows)
+               .groupby(["Units", "Why they match"], as_index=False)["Matches"].sum())
+    totals = grouped.groupby("Units")["Matches"].sum().sort_values(ascending=False)
+    # Only the pairs worth looking at. Every unit brushes against several others
+    # at one shared signal, and forty near-empty bars hide the handful that
+    # actually matter.
+    keep = totals.head(12).index.tolist()
+    grouped = grouped[grouped["Units"].isin(keep)]
+    # Sorting a stacked chart by its own value column would rank the segments,
+    # not the bars, so the bar order is carried in the label instead — the same
+    # trick the pipeline funnel uses, since Streamlit sorts categories itself.
+    rank = {unit: index for index, unit in enumerate(keep, start=1)}
+    grouped = grouped.assign(Units=grouped["Units"].map(lambda u: f"{rank[u]:02d} · {u}"))
+    st.bar_chart(grouped, x="Units", y="Matches", color="Why they match",
+                 horizontal=True, stack=True, x_label="Shared signals",
+                 y_label="", height=max(260, 38 * len(keep)))
+else:
+    st.info("No painpoint is currently shared across two units.")
+
 st.markdown("**Painpoints submitted over time**")
 dated = []
 for record in submissions:
